@@ -1,0 +1,15 @@
+[project]
+name = "django-app"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "Django>=5.0",
+    "djangorestframework",
+    "psycopg2-binary",
+    "django-leaflet",
+    "requests",
+    "python-dotenv"
+]
+
+[tool.vercel]
+entrypoint = "atlas_logistics.wsgi:application"
