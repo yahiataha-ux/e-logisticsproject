@@ -1,0 +1,78 @@
+{% extends 'transporter/base.html' %}
+{% load humanize %}
+
+{% block title %}Ma Flotte | Atlas Logistics{% endblock %}
+{% block header_title %}Gestion des Véhicules{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col space-y-4">
+        <div class="flex justify-between items-center">
+            <h3 class="text-xl font-black text-slate-800">État de la Flotte</h3>
+            <button onclick="document.getElementById('addVehicleForm').classList.toggle('hidden')" class="bg-slate-900 text-white px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all">+ Ajouter un véhicule</button>
+        </div>
+        
+        <!-- Add Vehicle Form -->
+        <div id="addVehicleForm" class="hidden bg-white p-8 rounded-[35px] border border-slate-100 shadow-sm">
+            <form method="POST" action="{% url 'transporter:add_vehicle' %}" class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                {% csrf_token %}
+                <div class="space-y-2">
+                    <label class="text-[9px] font-black uppercase text-slate-400">Type de Véhicule</label>
+                    <select name="type_vehicule" class="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-xs font-bold">
+                        <option value="Camion 10T">Camion 10T</option>
+                        <option value="Fourgonnette 3.5T">Fourgonnette 3.5T</option>
+                        <option value="Moto Cargo">Moto Cargo</option>
+                        <option value="Drone Livraison">Drone Livraison</option>
+                    </select>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[9px] font-black uppercase text-slate-400">Capacité (m³)</label>
+                    <input type="number" name="capacity" step="0.1" placeholder="Ex: 15.5" class="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-xs font-bold">
+                </div>
+                <button type="submit" class="bg-blue-600 text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all">Enregistrer le Véhicule</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for v in vehicles %}
+        <div class="bg-white p-6 rounded-[35px] border border-slate-100 shadow-sm relative overflow-hidden group hover:shadow-xl transition-all duration-500">
+            <div class="flex justify-between items-start mb-6">
+                <div class="w-14 h-14 {% if v.status == 'Actif' %}bg-slate-50 text-slate-400 group-hover:bg-slate-900 group-hover:text-white{% else %}bg-rose-50 text-rose-400{% endif %} rounded-[20px] flex items-center justify-center transition-all duration-500">
+                    {% if "Drone" in v.type_vehicule %}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                    {% else %}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1" />
+                    </svg>
+                    {% endif %}
+                </div>
+                <div class="flex flex-col items-end">
+                    <span class="px-3 py-1 {% if v.status == 'Actif' %}bg-emerald-500 text-white{% else %}bg-rose-500 text-white animate-pulse{% endif %} text-[9px] font-black rounded-full uppercase shadow-lg shadow-current/20">{{ v.status }}</span>
+                </div>
+            </div>
+            
+            <h4 class="text-xl font-black text-slate-900 tracking-tighter mb-1">{{ v.type_vehicule }}</h4>
+            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mb-6">Capacité: {{ v.capacity_m3 }} M³</p>
+            
+            <div class="pt-6 border-t border-slate-50 flex justify-between items-center">
+                <span class="text-[9px] text-slate-300 font-black uppercase tracking-widest">ID: #{{ v.id|stringformat:"04d" }}</span>
+                <div class="flex items-center space-x-3">
+                    <div class="w-1.5 h-1.5 rounded-full {% if v.status == 'Actif' %}bg-emerald-500 animate-ping{% else %}bg-rose-500{% endif %}"></div>
+                    <a href="{% url 'transporter:toggle_maintenance' v.id %}" class="text-[10px] font-black {% if v.status == 'Actif' %}text-slate-900 hover:text-rose-600{% else %}text-emerald-600 hover:text-emerald-800 underline{% endif %} uppercase tracking-widest transition-colors">
+                        {% if v.status == 'Actif' %}Signaler un problème{% else %}Remettre en service{% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full py-20 text-center">
+            <p class="text-slate-400 font-bold italic">Aucun véhicule enregistré dans votre flotte.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends 'transporter/base.html' %}
+{% load humanize %}
+
+{% block title %}Revenus | Atlas Logistics{% endblock %}
+{% block header_title %}Suivi Financier{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Revenue Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="bg-slate-900 p-8 rounded-[40px] text-white shadow-2xl relative overflow-hidden">
+            <div class="relative z-10">
+                <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-2">Chiffre d'Affaires Total</p>
+                <h3 class="text-4xl font-black mb-6">{{ total_earned|intcomma }} <span class="text-xl text-slate-500">MAD</span></h3>
+                <div class="flex items-center space-x-2 text-emerald-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="text-xs font-bold">+12% ce mois-ci</span>
+                </div>
+            </div>
+            <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-600 rounded-full blur-[100px] opacity-20"></div>
+        </div>
+        
+        <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm flex items-center justify-center">
+            <div class="text-center">
+                <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-2">Missions Payées</p>
+                <h3 class="text-3xl font-black text-slate-900">{{ missions.count }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- History -->
+    <div class="bg-white rounded-[40px] border border-slate-100 shadow-sm overflow-hidden">
+        <div class="p-8 border-b border-slate-50">
+            <h3 class="text-xl font-black text-slate-900">Historique des Paiements</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Mission ID</th>
+                        <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
+                        <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Distance</th>
+                        <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Montant</th>
+                        <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Statut</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    {% for m in missions %}
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-8 py-6 text-sm font-bold text-slate-900">#MS-{{ m.id|stringformat:"05d" }}</td>
+                        <td class="px-8 py-6 text-sm text-slate-500">Dernièrement</td>
+                        <td class="px-8 py-6 text-sm text-slate-500">{{ m.distance }} km</td>
+                        <td class="px-8 py-6 text-sm font-black text-slate-900">{{ m.remuneration|intcomma }} MAD</td>
+                        <td class="px-8 py-6">
+                            <span class="px-3 py-1 bg-emerald-100 text-emerald-600 text-[10px] font-black rounded-full uppercase">Payé</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-8 py-12 text-center text-slate-400 italic">Aucun revenu enregistré pour le moment.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

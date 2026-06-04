@@ -1,0 +1,201 @@
+{% extends 'admin_panel/base.html' %}
+{% load humanize %}
+
+{% block title %}Atlas Admin | Planogramme{% endblock %}
+{% block header_title %}Configuration Logistique & Planogramme{% endblock %}
+{% block breadcrumb %}Gestion Opérationnelle / Planogramme{% endblock %}
+
+{% block content %}
+<div class="p-8 lg:p-10 space-y-8">
+    <!-- Optimization Header -->
+    <div class="bg-premium-950 p-8 rounded-[40px] shadow-2xl relative overflow-hidden border border-white/5">
+        <div class="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
+            <div class="flex items-center space-x-6">
+                <div class="w-16 h-16 bg-premium-500 rounded-3xl overflow-hidden flex items-center justify-center text-white shadow-2xl shadow-premium-500/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-black text-white tracking-tighter">Optimisation Platforme</h3>
+                    <p class="text-xs text-premium-500 font-bold uppercase tracking-widest mt-1">Algorithme Global Atlas-AI : {{ current_strategy }}</p>
+                </div>
+            </div>
+
+            <form method="POST" class="flex flex-wrap items-center gap-4 bg-white/5 p-2 rounded-2xl border border-white/10">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_strategy">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-4">Stratégie d'Affectation</label>
+                <select name="strategy" class="bg-premium-900 border-none text-white text-xs font-bold rounded-xl px-6 py-3 focus:ring-2 focus:ring-premium-500 min-w-[200px]">
+                    {% for code, label in strategy_choices %}
+                    <option value="{{ code }}" {% if code == current_strategy %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="bg-premium-500 text-white px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-premium-400 transition-all shadow-xl shadow-premium-500/20">Lancer l'Optimisation</button>
+            </form>
+        </div>
+        <div class="absolute top-0 right-0 w-96 h-96 bg-premium-500 rounded-full blur-[150px] opacity-10 -translate-y-1/2 translate-x-1/2"></div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-4 gap-8">
+        <!-- Sidebar -->
+        <div class="xl:col-span-1 space-y-8">
+            <!-- Hub Selector -->
+            <div class="bg-white p-6 rounded-[35px] border border-slate-100 shadow-sm">
+                <h4 class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-50 pb-4">Sélection du Hub</h4>
+                <div class="space-y-3">
+                    {% for wh in warehouses %}
+                    <a href="?warehouse={{ wh.id }}" class="flex items-center justify-between p-4 rounded-2xl border transition-all {% if wh.id == selected_wh_id %}border-premium-500 bg-premium-50/50 shadow-sm{% else %}border-slate-50 hover:bg-slate-50{% endif %}">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-2 h-2 rounded-full {% if wh.id == selected_wh_id %}bg-premium-500{% else %}bg-slate-300{% endif %}"></div>
+                            <span class="text-xs font-black {% if wh.id == selected_wh_id %}text-premium-900{% else %}text-slate-600{% endif %}">{{ wh.city }} ({{ wh.name }})</span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Manual Placement -->
+            <div class="bg-premium-950 p-6 rounded-[35px] border border-white/10 shadow-2xl">
+                <h4 class="text-[11px] font-black text-premium-500 uppercase tracking-widest mb-6 border-b border-white/5 pb-4">Affectation Manuelle</h4>
+                <form method="POST" class="space-y-4">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="manual_assign">
+                    <input type="hidden" name="warehouse_id" value="{{ selected_wh.id|stringformat:'i' }}">
+                    
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Sélection du Produit</label>
+                        <select name="product_id" required class="w-full bg-premium-900 border border-white/10 text-white text-xs font-bold rounded-xl px-4 py-4 focus:ring-2 focus:ring-premium-500 appearance-none">
+                            <option value="" disabled selected class="bg-premium-900 text-white">Choisir un produit...</option>
+                            {% for p in all_products %}
+                            <option value="{{ p.id|stringformat:'i' }}" class="bg-premium-900 text-white">{{ p.name }} ({{ p.seller.username }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Rail</label>
+                            <select name="rail" class="w-full bg-white/5 border border-white/10 text-white text-xs font-bold rounded-xl px-4 py-3 focus:ring-2 focus:ring-premium-500">
+                                {% for i in "x"|rjust:selected_wh.total_rails %}
+                                <option value="{{ forloop.counter }}" class="bg-premium-900 text-white">{{ forloop.counter }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Étage</label>
+                            <select name="shelf" class="w-full bg-white/5 border border-white/10 text-white text-xs font-bold rounded-xl px-4 py-3 focus:ring-2 focus:ring-premium-500">
+                                {% for i in "x"|rjust:selected_wh.total_shelves %}
+                                <option value="{{ forloop.counter }}" class="bg-premium-900 text-white">{{ forloop.counter }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    {% if selected_wh %}
+                    <button type="submit" class="w-full bg-premium-500 text-white py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-premium-400 transition-all shadow-lg shadow-premium-500/20 mt-4">
+                        Affecter au Hub {{ selected_wh.city }}
+                    </button>
+                    {% else %}
+                    <div class="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 text-[10px] font-black uppercase text-center">
+                        Sélectionnez un Hub pour positionner
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Area -->
+        <div class="xl:col-span-3">
+            <div class="bg-white p-8 md:p-10 rounded-[45px] border border-slate-100 shadow-sm min-h-[800px]">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-10 pb-6 border-b border-slate-50">
+                    <div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tighter">Planogramme Dynamique</h2>
+                        <p class="text-xs text-slate-400 font-medium mt-1">Hub : <span class="text-premium-700 font-black">{{ selected_wh.name }}</span> ({{ selected_wh.city }})</p>
+                    </div>
+                    <div class="flex space-x-6">
+                        <div class="bg-slate-50 px-6 py-4 rounded-2xl border border-slate-100 flex items-center space-x-4">
+                            <div class="text-right">
+                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Configuration</p>
+                                <p class="text-sm font-black text-slate-900">{{ selected_wh.total_shelves }} <span class="text-[10px] text-slate-400">Étages</span></p>
+                            </div>
+                            <div class="w-px h-8 bg-slate-200"></div>
+                            <div>
+                                <p class="text-sm font-black text-slate-900">{{ selected_wh.total_rails }} <span class="text-[10px] text-slate-400">Rails / Étage</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Matrix Visualization -->
+                <div class="mb-12 bg-slate-50 p-8 rounded-[40px] border border-slate-100">
+                    <h4 class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-6">Matrice de Capacité IA (Étages vs Rails)</h4>
+                    <div class="grid gap-2 overflow-x-auto" style="grid-template-columns: repeat({{ selected_wh.total_rails }}, minmax(20px, 1fr));">
+                        {% for r in "x"|rjust:selected_wh.total_rails %}
+                            {% with rail_num=forloop.counter|stringformat:"s" %}
+                            <div class="space-y-2">
+                                {% for s in "x"|rjust:selected_wh.total_shelves %}
+                                    {% with shelf_num=forloop.counter|stringformat:"s" %}
+                                    {% with pos_check=" R"|add:rail_num|add:"S"|add:shelf_num|add:" " %}
+                                    <div class="h-4 rounded-md border border-slate-200 transition-all hover:scale-110 cursor-help 
+                                         {% if pos_check in occupied_positions %}bg-premium-500 border-premium-400 shadow-sm shadow-premium-500/50{% else %}bg-white{% endif %}" 
+                                         title="Rail {{ rail_num }}, Étage {{ shelf_num }} {% if pos_check in occupied_positions %}(Occupé){% endif %}">
+                                    </div>
+                                    {% endwith %}
+                                    {% endwith %}
+                                {% endfor %}
+                                <p class="text-[8px] font-black text-slate-300 text-center uppercase">R{{ rail_num }}</p>
+                            </div>
+                            {% endwith %}
+                        {% endfor %}
+                    </div>
+                    <div class="mt-6 flex items-center space-x-6">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 rounded bg-white border border-slate-200"></div>
+                            <span class="text-[9px] font-bold text-slate-400 uppercase">Disponible</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 rounded bg-premium-500"></div>
+                            <span class="text-[9px] font-bold text-slate-400 uppercase">Occupé (Bientôt disponible)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
+                    {% for rail, prods in warehouse_data %}
+                    <div class="border border-slate-100 rounded-[35px] overflow-hidden group hover:shadow-xl transition-all duration-500 flex flex-col">
+                        <div class="bg-slate-50 p-5 flex justify-between items-center group-hover:bg-premium-950 transition-colors duration-500">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-white shadow-sm rounded-2xl flex items-center justify-center text-xs font-black text-slate-900 group-hover:bg-premium-500 group-hover:text-white transition-all">R{{ rail }}</div>
+                                <h4 class="text-sm font-black text-slate-900 group-hover:text-white">Rail {{ rail }}</h4>
+                            </div>
+                            <span class="text-[10px] font-black text-slate-400 group-hover:text-slate-500 uppercase">{{ prods|length }} Produits</span>
+                        </div>
+                        <div class="p-5 flex-1 space-y-3 bg-white">
+                            {% for p in prods %}
+                            <div class="p-4 rounded-2xl bg-slate-900 border border-white/5 hover:border-premium-500/30 hover:bg-black transition-all shadow-2xl">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h5 class="text-[11px] font-black text-white leading-tight">{{ p.name|truncatechars:30 }}</h5>
+                                    <span class="text-[9px] font-black text-premium-400 uppercase">Étage {{ p.shelf }}</span>
+                                </div>
+                                <p class="text-[8px] text-slate-500 font-bold uppercase mb-2">Fournisseur : {{ p.seller.username }}</p>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[9px] font-bold text-slate-500 uppercase">Stock: {{ p.stock }}</span>
+                                    <div class="flex-1 mx-3 h-1 bg-white/5 rounded-full overflow-hidden">
+                                        <div class="h-full bg-premium-500" style="width: {% widthratio p.stock 1000 100 %}%"></div>
+                                    </div>
+                                    <span class="text-[10px] font-black text-premium-400">{{ p.stock }}</span>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="h-24 border-2 border-dashed border-slate-50 rounded-2xl flex items-center justify-center">
+                                <span class="text-[8px] font-black text-slate-200 uppercase tracking-widest">Emplacement Libre</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

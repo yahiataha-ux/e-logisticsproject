@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Bon de Sortie #{{ order.id|stringformat:"05d" }} | Atlas Logistics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            .no-print { display: none; }
+            body { background: white; }
+            .print-shadow-none { shadow: none; }
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-100 p-4 md:p-10">
+
+    <div class="max-w-4xl mx-auto bg-white p-12 rounded-[40px] shadow-2xl border border-slate-200 relative overflow-hidden">
+        <!-- Decoration -->
+        <div class="absolute top-0 right-0 w-64 h-64 bg-slate-900 rounded-full blur-[120px] opacity-5 -translate-y-1/2 translate-x-1/2"></div>
+        
+        <!-- Header -->
+        <div class="flex justify-between items-start mb-16 relative z-10">
+            <div>
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white font-black text-xl italic">A</div>
+                    <h1 class="text-2xl font-black text-slate-900 tracking-tighter">ATLAS <span class="text-slate-400">LOGISTICS</span></h1>
+                </div>
+                <div class="space-y-1 text-xs text-slate-500 font-bold uppercase tracking-widest">
+                    <p>Réseau Intelligent de Distribution</p>
+                    <p>Casablanca, Maroc</p>
+                    <p>contact@atlas-logistics.ma</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <h2 class="text-4xl font-black text-slate-900 tracking-tighter mb-2">BON DE SORTIE</h2>
+                <p class="text-sm font-black text-slate-400 uppercase tracking-[0.3em]">#ATL-{{ order.id|stringformat:"05d" }}</p>
+                <div class="mt-4 inline-block bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
+                    <p class="text-[10px] font-black text-slate-400 uppercase">Date d'émission</p>
+                    <p class="text-xs font-black text-slate-900">{{ date|date:"d F Y" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <hr class="border-slate-100 mb-12">
+
+        <!-- Stakeholders -->
+        <div class="grid grid-cols-2 gap-12 mb-16">
+            <div>
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Émetteur (PME)</h3>
+                <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                    <p class="text-lg font-black text-slate-900 mb-1">{{ order.product.seller.company_name|default:order.product.seller.username }}</p>
+                    <p class="text-xs text-slate-500 font-medium">Partenaire Certifié Atlas</p>
+                </div>
+            </div>
+            <div>
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Destinataire (Client)</h3>
+                <div class="bg-slate-900 p-6 rounded-3xl shadow-xl shadow-slate-900/10">
+                    <p class="text-lg font-black text-white mb-1">{{ order.client.get_full_name|default:order.client.username }}</p>
+                    <p class="text-xs text-slate-400 font-medium italic">Livraison Standard B2B</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logistics Details -->
+        <div class="mb-16">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Détails du Flux Logistique</h3>
+            <div class="border border-slate-100 rounded-[35px] overflow-hidden">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <tr>
+                            <th class="px-8 py-4">Désignation Produit</th>
+                            <th class="px-8 py-4 text-center">Quantité</th>
+                            <th class="px-8 py-4 text-center">Origine (Hub)</th>
+                            <th class="px-8 py-4 text-right">Impact CO2</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
+                        <tr>
+                            <td class="px-8 py-6">
+                                <p class="text-sm font-black text-slate-900">{{ order.product.name }}</p>
+                                <p class="text-[10px] text-slate-400 font-medium mt-1">Ref: SKU-{{ order.product.id|stringformat:"04d" }}</p>
+                            </td>
+                            <td class="px-8 py-6 text-center">
+                                <span class="bg-slate-100 px-3 py-1 rounded-lg text-xs font-black text-slate-900">{{ order.quantity }}</span>
+                            </td>
+                            <td class="px-8 py-6 text-center">
+                                <p class="text-xs font-black text-slate-600">{{ order.product.warehouse.city }}</p>
+                                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">{{ order.product.warehouse.name }}</p>
+                            </td>
+                            <td class="px-8 py-6 text-right">
+                                <span class="text-xs font-black text-emerald-600">{{ order.co2_emission|floatformat:2 }} kg</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Transporter Info -->
+        <div class="mb-16">
+            <div class="bg-blue-50 p-8 rounded-[35px] border border-blue-100">
+                <div class="flex items-center space-x-6">
+                    <div class="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" /></svg>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-black text-blue-400 uppercase tracking-widest mb-1">Chauffeur Assigné</h4>
+                        <p class="text-xl font-black text-blue-900 uppercase">{{ mission.chauffeur.user.get_full_name|default:mission.chauffeur.user.username|default:"En attente" }}</p>
+                        <p class="text-xs text-blue-600 font-bold">Véhicule: {{ mission.chauffeur.get_type_vehicule_display|default:"---" }} | Matricule: {{ mission.chauffeur.immatriculation|default:"---" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <p class="text-center text-[9px] text-slate-300 font-medium mt-16 uppercase tracking-[0.4em]">Document généré automatiquement par Atlas AI Infrastructure</p>
+    </div>
+
+    <!-- Actions -->
+    <div class="max-w-4xl mx-auto mt-8 flex justify-center space-x-4 no-print">
+        <a href="{% url 'enterprise:export_delivery_note_pdf' order.id %}" class="bg-blue-600 text-white px-10 py-4 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20 flex items-center space-x-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+            <span>Télécharger PDF</span>
+        </a>
+        <button onclick="window.print()" class="bg-slate-900 text-white px-10 py-4 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-slate-900/20 flex items-center space-x-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+            <span>Imprimer</span>
+        </button>
+        <button onclick="window.close()" class="bg-white border border-slate-200 text-slate-400 px-10 py-4 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-all">Fermer</button>
+    </div>
+
+</body>
+</html>

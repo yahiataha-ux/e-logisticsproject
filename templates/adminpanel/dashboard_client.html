@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Espace Client B2B - Atlas Logistics{% endblock %}
+
+{% block content %}
+<div class="p-8 space-y-8">
+    <div class="flex justify-between items-end">
+        <div>
+            <h2 class="text-3xl font-bold text-brand-900 tracking-tight">Espace Client : {{ user.company_name }}</h2>
+            <p class="text-gray-500 mt-2 font-medium">Suivi de vos commandes et historique d'achats B2B.</p>
+        </div>
+        <div class="bg-white px-8 py-4 rounded-2xl border border-gray-100 shadow-xl flex items-center">
+            <div class="mr-6">
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Dépenses Totales</p>
+                <p class="text-3xl font-black text-brand-900">{{ total_spent|intcomma }}</p>
+            </div>
+            <div class="w-12 h-12 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders Status -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="p-6 border-b border-gray-50">
+            <h3 class="text-lg font-bold text-brand-900">Historique de mes Flux d'Achats</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-gray-50 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">
+                    <tr>
+                        <th class="px-6 py-4">Produit</th>
+                        <th class="px-6 py-4">Fournisseur</th>
+                        <th class="px-6 py-4">Montant Total</th>
+                        <th class="px-6 py-4">Empreinte CO2</th>
+                        <th class="px-6 py-4">Statut de Livraison</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for o in my_orders %}
+                    <tr class="hover:bg-gray-50/50 transition-colors">
+                        <td class="px-6 py-4 font-bold text-gray-800 text-sm">{{ o.product.name }}</td>
+                        <td class="px-6 py-4 text-xs font-semibold text-brand-700">{{ o.product.seller.company_name }}</td>
+                        <td class="px-6 py-4 font-black text-gray-900">{{ o.price_total|floatformat:2 }} MAD</td>
+                        <td class="px-6 py-4 text-xs text-green-600 font-bold">{{ o.co2_emission|floatformat:1 }} kg CO2</td>
+                        <td class="px-6 py-4">
+                            {% if o.status == 'Livrée' %}
+                                <span class="px-3 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full uppercase tracking-tighter">Livrée avec succès</span>
+                            {% elif o.status == 'En livraison' %}
+                                <span class="px-3 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full uppercase tracking-tighter italic animate-pulse">En transit...</span>
+                            {% else %}
+                                <span class="px-3 py-1 bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full uppercase tracking-tighter">{{ o.status }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

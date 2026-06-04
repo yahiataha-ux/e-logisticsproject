@@ -1,0 +1,112 @@
+{% extends 'admin_panel/base.html' %}
+{% load humanize %}
+
+{% block title %}Atlas Admin | Optimisation Flux{% endblock %}
+{% block header_title %}Algorithmes d'Optimisation des Flux Logistiques{% endblock %}
+{% block breadcrumb %}IA / Optimisation Flux{% endblock %}
+
+{% block content %}
+<div class="p-8 lg:p-10 space-y-10">
+    <!-- IA Strategy Card -->
+    <div class="bg-gradient-to-br from-premium-950 to-slate-900 p-8 rounded-[40px] text-white shadow-2xl relative overflow-hidden">
+        <div class="absolute top-0 right-0 p-10 opacity-10">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-48 w-48" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+        </div>
+        <div class="relative z-10 w-full">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <span class="inline-block px-4 py-1.5 bg-premium-500/20 border border-premium-500/30 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-3">Analytique Globale</span>
+                    <h2 class="text-3xl font-black tracking-tighter leading-none">Performance <span class="text-premium-500">Service & Livraison</span></h2>
+                </div>
+                <form method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="bg-premium-500 hover:bg-premium-400 px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all shadow-xl shadow-premium-500/20 flex items-center gap-2">
+                        <i class="fas fa-sync-alt"></i> Mettre à jour les données
+                    </button>
+                </form>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white/10 backdrop-blur-md border border-white/10 p-6 rounded-3xl">
+                    <div class="text-slate-300 text-xs font-black uppercase tracking-widest mb-2 flex items-center gap-2"><i class="fas fa-tachometer-alt text-premium-400"></i> Service Level Agreement</div>
+                    <div class="text-4xl font-black">98.5 <span class="text-lg text-slate-400">%</span></div>
+                    <div class="text-xs text-premium-400 mt-2 font-semibold">+1.2% vs mois dernier</div>
+                </div>
+                <div class="bg-white/10 backdrop-blur-md border border-white/10 p-6 rounded-3xl">
+                    <div class="text-slate-300 text-xs font-black uppercase tracking-widest mb-2 flex items-center gap-2"><i class="fas fa-clock text-blue-400"></i> Temps Moyen Livraison</div>
+                    <div class="text-4xl font-black">45 <span class="text-lg text-slate-400">min</span></div>
+                    <div class="text-xs text-blue-400 mt-2 font-semibold">-5 min vs mois dernier</div>
+                </div>
+                <div class="bg-white/10 backdrop-blur-md border border-white/10 p-6 rounded-3xl">
+                    <div class="text-slate-300 text-xs font-black uppercase tracking-widest mb-2 flex items-center gap-2"><i class="fas fa-check-circle text-emerald-400"></i> Livraisons à l'Heure (OTIF)</div>
+                    <div class="text-4xl font-black">94.2 <span class="text-lg text-slate-400">%</span></div>
+                    <div class="text-xs text-emerald-400 mt-2 font-semibold">Objectif > 95%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm">
+            <h3 class="text-xl font-black text-slate-900 mb-8 tracking-tighter uppercase">Taux de Saturation des Hubs</h3>
+            <div class="h-[400px]">
+                <canvas id="fluxChart"></canvas>
+            </div>
+        </div>
+
+        <div class="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm space-y-10">
+            <h3 class="text-xl font-black text-slate-900 tracking-tighter uppercase">KPIs Plateforme</h3>
+            
+            <div class="space-y-6">
+                <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-2">Flux Totaux</p>
+                    <p class="text-3xl font-black text-slate-900">{{ total_orders }} <span class="text-xs text-slate-400">missions</span></p>
+                </div>
+                <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-2">Impact Carbone Global</p>
+                    <p class="text-3xl font-black text-emerald-600">{{ total_co2|floatformat:1 }} <span class="text-xs text-emerald-400">Tonnes</span></p>
+                </div>
+                <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-2">Volume d'Affaires SaaS</p>
+                    <p class="text-3xl font-black text-premium-700">{{ total_revenue|floatformat:0 }} <span class="text-xs text-premium-400">MAD</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('fluxChart').getContext('2d');
+        const hubData = {{ hub_data|safe }};
+        const labels = hubData.map(h => h.name);
+        const values = hubData.map(h => h.saturation);
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Saturation (%)',
+                    data: values,
+                    backgroundColor: '#22c55e',
+                    borderRadius: 16,
+                    barThickness: 40
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, max: 100, grid: { color: '#f1f5f9' }, border: { display: false } },
+                    x: { grid: { display: false }, border: { display: false } }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

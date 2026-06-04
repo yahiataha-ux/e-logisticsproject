@@ -1,0 +1,627 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Chauffeur | Atlas Logistics</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Tailwind for utilities (optional but user provided base.html uses it, however prompt asked for Vanilla CSS aesthetics) -->
+
+    <style>
+        :root {
+            --primary: #1e293b;
+            --sidebar-width: 320px;
+            --header-height: 70px;
+            --green: #22C55E;
+            --blue: #6366F1;
+            --orange: #F97316;
+            --red: #EF4444;
+            --slate-50: #f8fafc;
+            --slate-100: #f1f5f9;
+            --slate-200: #e2e8f0;
+            --slate-300: #cbd5e1;
+            --slate-400: #94a3b8;
+            --slate-500: #64748b;
+            --slate-600: #475569;
+            --slate-700: #334155;
+            --slate-800: #1e293b;
+            --slate-900: #0f172a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--slate-100);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* HEADER */
+        header {
+            height: var(--header-height);
+            background: white;
+            border-bottom: 1px solid var(--slate-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .driver-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .driver-photo {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--slate-200);
+            border: 2px solid var(--blue);
+            object-fit: cover;
+        }
+
+        .driver-info h1 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--slate-800);
+        }
+
+        .driver-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--green);
+            background: #f0fdf4;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            border: 1px solid #dcfce7;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--slate-800);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--slate-900);
+        }
+
+        .btn-outline {
+            background: white;
+            border: 1px solid var(--slate-200);
+            color: var(--slate-600);
+        }
+
+        .btn-outline:hover {
+            background: var(--slate-50);
+            border-color: var(--slate-300);
+        }
+
+        /* MAIN CONTENT AREA */
+        .main-wrapper {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - var(--header-height));
+        }
+
+        /* SIDEBAR */
+        #sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            border-right: 1px solid var(--slate-200);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: var(--slate-50);
+            border-bottom: 1px solid var(--slate-200);
+        }
+
+        .sidebar-title {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            color: var(--slate-500);
+            margin-bottom: 12px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--slate-200);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+        }
+
+        .kpi-card.eco {
+            background: #ecfdf5;
+            border-color: #bbf7d0;
+        }
+
+        .kpi-value {
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--slate-800);
+        }
+
+        .eco .kpi-value {
+            color: var(--green);
+        }
+
+        .kpi-label {
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--slate-400);
+        }
+
+        .eco .kpi-label {
+            color: #059669;
+        }
+
+        .missions-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 0;
+        }
+
+        .tournee-section {
+            margin-bottom: 24px;
+            padding: 0 16px;
+        }
+
+        .tournee-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--slate-100);
+        }
+
+        .tournee-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .tournee-name {
+            font-weight: 800;
+            font-size: 13px;
+            color: var(--slate-800);
+        }
+
+        .tournee-count {
+            margin-left: auto;
+            font-size: 11px;
+            color: var(--slate-400);
+        }
+
+        .arret-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 6px;
+            border: 1px solid transparent;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .arret-item:hover {
+            background: var(--slate-50);
+            border-color: var(--slate-200);
+            transform: translateX(4px);
+        }
+
+        .arret-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--slate-800);
+            flex-shrink: 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .arret-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .arret-client {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--slate-800);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .arret-adresse {
+            font-size: 11px;
+            color: var(--slate-500);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .arret-status {
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            background: #fef9c3;
+            color: #854d0e;
+            white-space: nowrap;
+        }
+
+        /* MAP */
+        #map-container {
+            flex: 1;
+            background: var(--slate-200);
+            position: relative;
+        }
+
+        /* CUSTOM LEAFLET POPUP STYLES */
+        .leaflet-popup-content-wrapper {
+            padding: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        .leaflet-popup-content {
+            margin: 0;
+            width: 240px !important;
+        }
+
+        .leaflet-popup-tip-container {
+            display: none;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--slate-300);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--slate-400);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <div class="header-left">
+            <div class="driver-profile">
+                {% if chauffeur.photo %}
+                <img src="{{ chauffeur.photo.url }}" class="driver-photo" alt="Photo">
+                {% else %}
+                <div class="driver-photo"
+                    style="display:flex;align-items:center;justify-content:center;background:var(--slate-800);color:white;">
+                    <i class="fas fa-user"></i>
+                </div>
+                {% endif %}
+                <div class="driver-info">
+                    <h1>{{ chauffeur.user.first_name }} {{ chauffeur.user.last_name|default:"" }}</h1>
+                    <div class="driver-status">
+                        <i class="fas fa-circle" style="font-size: 6px;"></i>
+                        En service
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <a href="{% url 'transporter:notifications' %}" class="btn btn-outline">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge" style="background: var(--red); color: white; border-radius: 50%; padding: 2px 6px; font-size: 9px; position: relative; top: -8px; left: -8px;">3</span>
+            </a>
+            <a href="{% url 'logout' %}" class="btn btn-outline" style="color: var(--red); border-color: rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.05);">
+                <i class="fas fa-sign-out-alt"></i>
+                Déconnexion
+            </a>
+        </div>
+    </header>
+
+    <div class="main-wrapper">
+        <!-- SIDEBAR -->
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">Ma journée</div>
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-value">{{ missions|length }}</div>
+                        <div class="kpi-label">Livraisons</div>
+                    </div>
+                    <div class="kpi-card eco">
+                        <div class="kpi-value">{{ co2_eco|floatformat:1 }} kg</div>
+                        <div class="kpi-label">CO₂ économisé</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="missions-container" id="sidebar-list">
+                <!-- Les tournées seront injectées ici par JS -->
+            </div>
+        </aside>
+
+        <!-- MAP CONTAINER -->
+        <div id="map-container"></div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // ---- CONFIGURATION DE BASE ----
+        const map = L.map('map-container', {
+            zoomControl: false // On va le repositionner
+        }).setView([33.5731, -7.5898], 12);
+
+        L.control.zoom({ position: 'topright' }).addTo(map);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap contributors © CARTO',
+            maxZoom: 18
+        }).addTo(map);
+
+        // ---- UTILITAIRES CARTE ----
+        function creerMarqueurNumero(latlng, numero, couleur, infos) {
+            const icon = L.divIcon({
+                html: `<div style="
+                    width: 32px; height: 32px;
+                    background: white;
+                    border: 4px solid ${couleur};
+                    border-radius: 50%;
+                    display: flex; align-items: center; justify-content: center;
+                    font-weight: 900; font-size: 14px; color: var(--slate-800);
+                    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+                ">${numero}</div>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16],
+                className: ''
+            });
+
+            const popupContent = `
+                <div style="padding:16px; font-family:'Inter', sans-serif;">
+                    <div style="font-size:10px; font-weight:800; color:var(--slate-400); text-transform:uppercase; margin-bottom:4px">
+                        Arrêt n°${numero}
+                    </div>
+                    <div style="font-size:16px; font-weight:800; color:var(--slate-800); margin-bottom:12px">
+                        ${infos.client}
+                    </div>
+                    <div style="display:flex; gap:6px; margin-bottom:16px">
+                        <span style="background:#f1f5f9; color:#475569; padding:4px 10px; border-radius:6px; font-size:10px; font-weight:600">
+                          📦 ${infos.colis}
+                        </span>
+                        <span style="background:#ecfdf5; color:#059669; padding:4px 10px; border-radius:6px; font-size:10px; font-weight:600">
+                          🌱 ${infos.co2.toFixed(1)}kg CO₂
+                        </span>
+                    </div>
+                    <div style="font-size:12px; color:var(--slate-500); line-height:1.5; margin-bottom:16px">
+                        <i class="fas fa-map-marker-alt"></i> ${infos.adresse}
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-primary" style="flex:1; justify-content:center; padding:10px;">
+                            Signaler Livraison
+                        </button>
+                        <a href="https://www.google.com/maps/dir/?api=1&destination=${latlng[0]},${latlng[1]}" target="_blank" 
+                           class="btn btn-outline" style="padding:10px; min-width:44px; justify-content:center;">
+                            <i class="fas fa-location-arrow" style="color:var(--blue)"></i>
+                        </a>
+                    </div>
+                </div>
+            `;
+
+            return L.marker(latlng, { icon: icon }).addTo(map).bindPopup(popupContent);
+        }
+
+        // ---- DONNÉES TOURNÉES DYNAMIQUES ----
+        const tourneesRaw = '{{ tournees_json|escapejs }}';
+        const tournees = tourneesRaw ? JSON.parse(tourneesRaw) : [];
+
+        const markers = {};
+
+        // ---- INITIALISATION DES TOURNÉES ----
+        const sidebarList = document.getElementById('sidebar-list');
+
+        if (tournees.length === 0) {
+            sidebarList.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--slate-400); font-size: 12px; font-weight: 600;">Rien n\'a été assigné.</div>';
+            
+            // Default center if no routes
+            const defaultIcon = L.divIcon({
+                html: `<div style="width: 12px; height: 12px; background: #3b82f6; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px rgba(59,130,246,0.5);"></div>`,
+                className: ''
+            });
+            const defaultPos = [33.5731, -7.5898];
+            L.marker(defaultPos, { icon: defaultIcon }).addTo(map).bindPopup("En attente d'assignation");
+            map.setView(defaultPos, 12);
+        }
+
+        const allPoints = [];
+
+        tournees.forEach(t => {
+            const entrepotCoords = t.entrepot;
+            
+            // Marqueur de l'entrepôt pour cette tournée
+            const entrepotIcon = L.divIcon({
+                html: `<div style="
+                    width: 22px; height: 22px;
+                    background: ${t.couleur};
+                    border: 3px solid white;
+                    box-shadow: 0 2px 10px ${t.couleur}66;
+                    display: flex; align-items: center; justify-content: center;
+                    color: white; font-size: 10px;
+                "><i class="fas fa-warehouse"></i></div>`,
+                iconSize: [22, 22],
+                iconAnchor: [11, 11],
+                className: ''
+            });
+
+            L.marker(entrepotCoords, { icon: entrepotIcon })
+                .addTo(map)
+                .bindPopup(`<b>🏭 Hub de départ</b><br>${t.name}`);
+                
+            allPoints.push(entrepotCoords);
+
+            // 1. Tracer la polyline (Boucle fermée Entrepôt -> Arrêts -> Entrepôt)
+            const coords = [entrepotCoords, ...t.arrets.map(a => a.latlng), entrepotCoords];
+            L.polyline(coords, {
+                color: t.couleur,
+                weight: 6,
+                opacity: 0.8,
+                lineJoin: 'round',
+                lineCap: 'round'
+            }).addTo(map);
+
+            // 2. Ajouter les marqueurs
+            t.arrets.forEach(a => {
+                const marker = creerMarqueurNumero(a.latlng, a.num, t.couleur, a.infos);
+                markers[`${t.id}-${a.num}`] = marker;
+                allPoints.push(a.latlng);
+            });
+
+            // 3. Créer la section sidebar
+            const section = document.createElement('div');
+            section.className = 'tournee-section';
+            section.innerHTML = `
+                <div class="tournee-header">
+                    <div class="tournee-dot" style="background:${t.couleur}"></div>
+                    <span class="tournee-name">${t.name}</span>
+                    <span class="tournee-count">${t.arrets.length} arrêts</span>
+                </div>
+            `;
+
+            t.arrets.forEach(a => {
+                const item = document.createElement('div');
+                item.className = 'arret-item';
+                item.onclick = () => {
+                    map.flyTo(a.latlng, 15, { duration: 1.5 });
+                    markers[`${t.id}-${a.num}`].openPopup();
+                };
+                item.innerHTML = `
+                    <div class="arret-number" style="border: 2px solid ${t.couleur}">${a.num}</div>
+                    <div class="arret-info">
+                        <div class="arret-client">${a.infos.client}</div>
+                        <div class="arret-adresse">${a.infos.adresse ? a.infos.adresse.split(',')[0] : 'Adresse inconnue'}</div>
+                    </div>
+                    <span class="arret-status">En attente</span>
+                `;
+                section.appendChild(item);
+            });
+
+            sidebarList.appendChild(section);
+        });
+
+        // ---- LÉGENDE ----
+        const legende = L.control({ position: 'bottomleft' });
+
+        legende.onAdd = function () {
+            const div = L.DomUtil.create('div');
+            div.innerHTML = `
+              <div style="background:white; padding:16px;
+                   border-radius:16px; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);
+                   font-family:'Inter', sans-serif; font-size:12px; min-width:200px;
+                   border: 1px solid var(--slate-200);">
+                <div style="font-weight:800; margin-bottom:12px; color:var(--slate-800); font-size:13px">
+                  Statut des Tournées
+                </div>
+                ${tournees.map(t => `
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px">
+                      <div style="width:24px; height:5px; background:${t.couleur}; border-radius:4px"></div>
+                      <span style="color:var(--slate-600); font-weight:500">${t.name}</span>
+                    </div>
+                `).join('')}
+                <div style="margin-top:12px; padding-top:12px;
+                     border-top:1px solid var(--slate-100); color:var(--green);
+                     font-size:11px; font-weight:700; display:flex; align-items:center; gap:6px">
+                  <i class="fas fa-leaf"></i> Impact : 12.0 kg CO₂ évités
+                </div>
+              </div>`;
+            return div;
+        };
+        legende.addTo(map);
+
+        // Fit map to show all markers
+        if (allPoints.length > 0) {
+            map.fitBounds(L.latLngBounds(allPoints), { padding: [50, 50] });
+        }
+
+    </script>
+</body>
+
+</html>

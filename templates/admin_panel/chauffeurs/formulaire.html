@@ -1,0 +1,91 @@
+{% extends 'admin_panel/base.html' %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">{% if chauffeur %}Modifier{% else %}Ajouter{% endif %} un Chauffeur</h1>
+    
+    <div class="bg-white rounded-lg shadow p-6 max-w-2xl">
+        <form method="POST">
+            {% csrf_token %}
+            
+            <h3 class="text-xl font-bold mb-4 border-b pb-2">Informations Utilisateur</h3>
+            {% if not chauffeur %}
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Nom d'utilisateur</label>
+                    <input type="text" name="username" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Mot de passe</label>
+                    <input type="password" name="password" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Nom complet</label>
+                    <input type="text" name="nom" value="{{ chauffeur.user.first_name }}" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Email</label>
+                    <input type="email" name="email" value="{{ chauffeur.user.email }}" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+            </div>
+
+            <h3 class="text-xl font-bold mb-4 border-b pb-2">Informations Transport</h3>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Téléphone</label>
+                    <input type="text" name="telephone" value="{{ chauffeur.telephone }}" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Zone d'action</label>
+                    <select name="zone" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="">Aucune</option>
+                        {% for z in zones %}
+                        <option value="{{ z.id }}" {% if chauffeur.zone_id == z.id %}selected{% endif %}>{{ z.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-4 mb-6">
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Véhicule</label>
+                    <select name="type_vehicule" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        {% for key, val in vehicules %}
+                        <option value="{{ key }}" {% if chauffeur.type_vehicule == key %}selected{% endif %}>{{ val }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Immatriculation</label>
+                    <input type="text" name="immatriculation" value="{{ chauffeur.immatriculation }}" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Capacité (kg)</label>
+                    <input type="number" name="capacite" value="{{ chauffeur.capacite_max_kg }}" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+            </div>
+            
+            {% if chauffeur %}
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Statut</label>
+                <select name="statut" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    {% for key, val in statuts %}
+                    <option value="{{ key }}" {% if chauffeur.statut == key %}selected{% endif %}>{{ val }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            
+            <div class="flex items-center justify-between mt-8">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    Enregistrer
+                </button>
+                <a href="{% url 'admin_panel:chauffeurs' %}" class="text-gray-600 hover:text-gray-900">Annuler</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends 'enterprise/base.html' %}
+{% load humanize l10n %}
+
+{% block title %}Gestion des Commandes | Atlas Enterprise{% endblock %}
+{% block header_title %}Suivi & Management des Commandes B2B{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="p-8 border-b border-slate-100 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-slate-900 tracking-tight">Registre des Flux de Commandes</h3>
+            <div class="flex items-center gap-4">
+                <a href="{% url 'enterprise:export_orders' %}" class="bg-slate-900 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg shadow-slate-900/20">Exporter Excel</a>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-slate-50/50 text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.2em]">
+                    <tr>
+                        <th class="px-8 py-5">Flux ID</th>
+                        <th class="px-8 py-5">Produit & Détails</th>
+                        <th class="px-8 py-5">Client</th>
+                        <th class="px-8 py-5">Impact CO2</th>
+                        <th class="px-8 py-5 text-right">Valeur Flux</th>
+                        <th class="px-8 py-5">Transporteur</th>
+                        <th class="px-8 py-5">Statut</th>
+                        <th class="px-8 py-5">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    {% for o in orders %}
+                    <tr class="hover:bg-slate-50/30 transition-all duration-300">
+                        <td class="px-8 py-5 font-mono text-[11px] text-slate-400">#ATL-{{ o.id|stringformat:"05d" }}</td>
+                        <td class="px-8 py-5">
+                            <div class="flex flex-col">
+                                <span class="font-bold text-slate-800 text-sm">{{ o.product.name }}</span>
+                                <span class="text-[9px] text-slate-400 font-bold uppercase">Qté: {{ o.quantity }} | {{ o.order_date|date:"d M Y" }}</span>
+                            </div>
+                        </td>
+                        <td class="px-8 py-5 font-bold text-slate-500 text-xs">{{ o.client.company_name|default:o.client.username }}</td>
+                        <td class="px-8 py-5">
+                            <span class="text-xs font-black text-emerald-600">{{ o.co2_emission|floatformat:2 }} kg</span>
+                        </td>
+                        <td class="px-8 py-5 text-right">
+                            <span class="text-sm font-black text-slate-900">{{ o.price_total|floatformat:2 }} MAD</span>
+                        </td>
+                        <td class="px-8 py-5">
+                            {% if o.missionlivraison_set.all %}
+                                {% with mission=o.missionlivraison_set.first %}
+                                <div class="flex flex-col">
+                                    <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest">{{ mission.chauffeur.user.username }}</span>
+                                    <span class="text-[9px] text-slate-400 font-medium">→ {{ mission.entrepot.city }}</span>
+                                </div>
+                                {% endwith %}
+                            {% else %}
+                                <span class="text-[9px] text-slate-300 font-bold uppercase italic">En attente opérateur</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-8 py-5">
+                            <div class="flex items-center space-x-2">
+                                <span class="w-2 h-2 rounded-full {% if o.status == 'Livrée' %}bg-emerald-500{% elif o.status == 'En livraison' %}bg-blue-500 animate-pulse{% elif o.status == 'Confirmée' %}bg-amber-500{% else %}bg-slate-300{% endif %}"></span>
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">{{ o.status }}</span>
+                            </div>
+                        </td>
+                        <td class="px-8 py-5">
+                            <a href="{% url 'enterprise:delivery_note' o.id %}" target="_blank" class="flex items-center space-x-2 bg-slate-50 hover:bg-slate-100 text-slate-600 px-3 py-2 rounded-lg transition-all border border-slate-100">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                                <span class="text-[9px] font-black uppercase">Bon de Sortie</span>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-8 py-10 text-center text-slate-400 font-medium">Aucune commande enregistrée pour le moment.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

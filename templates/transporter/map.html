@@ -1,0 +1,247 @@
+{% extends 'transporter/base.html' %}
+{% load l10n %}
+
+{% block title %}Optimisation de Trajet | Atlas Logistics{% endblock %}
+{% block header_title %}Planificateur de Trajets Intelligent{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<div class="space-y-4">
+<div class="space-y-6">
+    <!-- Comparison Dashboard -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Normal Stats -->
+        <div class="bg-white p-6 rounded-[35px] border border-slate-100 shadow-sm relative overflow-hidden">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Plan de Route Standard</span>
+                <span class="px-2 py-0.5 bg-slate-100 text-slate-500 text-[8px] font-black rounded-full uppercase">Direct</span>
+            </div>
+            <div class="flex space-x-12">
+                <div>
+                    <p class="text-3xl font-black text-slate-900 tracking-tighter">{{ total_km }} <span class="text-xs text-slate-400 font-bold">KM</span></p>
+                    <p class="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-1">Distance Totale</p>
+                </div>
+                <div>
+                    <p class="text-3xl font-black text-slate-900 tracking-tighter">{{ total_co2|floatformat:2 }} <span class="text-xs text-slate-400 font-bold">T</span></p>
+                    <p class="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-1">Emissions CO2</p>
+                </div>
+            </div>
+            <!-- Sequence -->
+            <div class="mt-4 pt-4 border-t border-slate-50">
+                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2">Trajets Individuels :</p>
+                <div class="flex flex-wrap gap-1.5">
+                    {% for stop in normal_stops %}
+                    <span class="px-2 py-1 bg-slate-50 border border-slate-100 rounded-lg text-[8px] font-bold text-slate-500 uppercase whitespace-nowrap">{{ stop }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Optimized Stats -->
+        <div class="bg-emerald-950 p-6 rounded-[35px] shadow-xl relative overflow-hidden border border-emerald-500/20">
+            <div class="flex justify-between items-center mb-4 relative z-10">
+                <span class="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Optimisation IA Active</span>
+                <span class="px-2 py-0.5 bg-emerald-500 text-white text-[8px] font-black rounded-full uppercase animate-pulse">Optimal</span>
+            </div>
+            <div class="flex space-x-12 relative z-10">
+                <div>
+                    <p class="text-3xl font-black text-emerald-400 tracking-tighter">{{ opti_km }} <span class="text-xs text-emerald-600 font-bold">KM</span></p>
+                    <p class="text-[9px] text-emerald-500/50 font-black uppercase tracking-widest mt-1">Dist. IA</p>
+                </div>
+                <div>
+                    <p class="text-3xl font-black text-emerald-400 tracking-tighter">{{ opti_co2|floatformat:2 }} <span class="text-xs text-emerald-600 font-bold">T</span></p>
+                    <p class="text-[9px] text-emerald-500/50 font-black uppercase tracking-widest mt-1">CO2 IA</p>
+                </div>
+                <div class="flex-1 text-right">
+                    <p class="text-4xl font-black text-emerald-500 tracking-tighter animate-pulse">-{{ km_saved }} <span class="text-sm">KM</span></p>
+                    <p class="text-[9px] text-emerald-600 font-black uppercase tracking-widest mt-1 italic">Gain Réel</p>
+                </div>
+            </div>
+            <!-- Sequence -->
+            <div class="mt-4 pt-4 border-t border-white/5">
+                <p class="text-[8px] font-black text-emerald-500 uppercase tracking-widest mb-2">Itinéraire Suggéré (Milk-run) :</p>
+                <div class="flex flex-wrap gap-1.5">
+                    {% for stop in opti_stops %}
+                    <span class="px-2 py-1 bg-white/5 border border-white/5 rounded-lg text-[8px] font-bold text-white/80 uppercase whitespace-nowrap">{{ stop }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-emerald-500 rounded-full blur-[80px] opacity-10"></div>
+        </div>
+    </div>
+
+
+    <div class="flex flex-col lg:flex-row h-auto lg:h-[calc(100vh-280px)] gap-6">
+
+    <!-- Left: Mission Selector & IA Stats -->
+    <div class="w-full lg:w-80 flex flex-col gap-4 overflow-y-auto pr-2">
+        <div class="bg-white p-6 rounded-[30px] border border-slate-100 shadow-sm">
+            <h3 class="text-xs font-black text-slate-900 uppercase tracking-widest mb-4">Missions Disponibles</h3>
+            <form id="filter-form" method="GET" class="space-y-3">
+                <div class="space-y-2">
+                    {% for m in detailed_missions_list %}
+                    <label class="flex items-center space-x-3 p-3 rounded-2xl hover:bg-slate-50 border border-transparent hover:border-slate-100 cursor-pointer transition-all group">
+                        <input type="checkbox" name="selected_missions" value="{{ m.id|unlocalize }}" {% if m.id|stringformat:"i" in selected_ids %}checked{% endif %} class="w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-black text-slate-900 group-hover:text-blue-600">{{ m.code }}</span>
+                            <span class="text-[8px] font-bold text-slate-400 uppercase">Vers: {{ m.to_city }}</span>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+                <button type="submit" class="w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] transition-all shadow-lg">Appliquer & Analyser</button>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Right: Map Section -->
+    <div class="flex-1 bg-white rounded-[40px] shadow-sm border border-slate-100 overflow-hidden relative">
+        <div id="map" class="w-full h-full z-0"></div>
+        
+        <!-- Toggle Control -->
+        <div class="absolute top-6 left-1/2 -translate-x-1/2 z-[1000] bg-white/90 backdrop-blur-xl p-1.5 rounded-2xl shadow-2xl border border-white/50 flex space-x-1">
+            <button id="show-normal" class="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all bg-slate-900 text-white shadow-lg">Vue Directe</button>
+            <button id="show-opti" class="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all text-slate-400 hover:text-slate-900">Vue Milk-run (IA)</button>
+        </div>
+
+        <!-- Legend Overlay -->
+        <div class="absolute bottom-6 right-6 z-[1000] bg-white/90 backdrop-blur-md p-5 rounded-[30px] shadow-2xl border border-slate-100 max-w-[200px]">
+            <h5 class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3 border-b border-slate-100 pb-2">Légende Logistique</h5>
+            <div class="space-y-3">
+                <div class="flex items-center space-x-3">
+                    <div class="w-6 h-0.5 bg-blue-500 rounded-full animate-pulse"></div>
+                    <span class="text-[9px] font-black text-slate-600 uppercase">Flux Aller</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="w-6 h-0.5 bg-orange-500 rounded-full border-dashed"></div>
+                    <span class="text-[9px] font-black text-orange-600 uppercase">Retour Vide</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="w-6 h-1 bg-emerald-500 rounded-full shadow-sm"></div>
+                    <span class="text-[9px] font-black text-emerald-600 uppercase">Boucle IA</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const map = L.map('map', { zoomControl: false }).setView([33.5731, -7.5898], 6);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+        const detailedData = {{ detailed_missions_json|safe }};
+        const optiData = {{ opti_json|safe }};
+        const normalLayers = L.layerGroup();
+        const optiLayers = L.layerGroup();
+
+        // 1. Render Normal Plan: Individual missions with Codes
+        detailedData.forEach(m => {
+            // Outward path
+            L.polyline([m.from_pos, m.to_pos], { 
+                color: '#3b82f6', weight: 2, opacity: 0.6, dashArray: '10, 10', className: 'path-outward' 
+            }).addTo(normalLayers);
+            
+            // Return path
+            L.polyline([m.to_pos, m.from_pos], { 
+                color: '#f97316', weight: 1.5, opacity: 0.4, dashArray: '5, 5', className: 'path-return' 
+            }).addTo(normalLayers);
+            
+            const marker = L.divIcon({
+                className: 'normal-marker',
+                html: `<div class="px-2 py-0.5 bg-blue-500 text-white text-[8px] font-black rounded border border-white shadow-lg whitespace-nowrap">${m.code}</div>`,
+                iconSize: [40, 16],
+                iconAnchor: [20, 8]
+            });
+            L.marker(m.to_pos, { icon: marker }).addTo(normalLayers)
+                .bindPopup(`<b class="text-blue-600">${m.code}</b><br><span class="text-[10px] font-bold">De: ${m.from_city}<br>À: ${m.to_city}</span>`);
+        });
+
+
+        // 2. Render Optimized Plan: One single continuous path (Milk-run)
+        const pathPoints = optiData.map(s => s.pos);
+        L.polyline(pathPoints, { 
+            color: '#10b981', weight: 4, opacity: 1, lineCap: 'round', className: 'path-optimized' 
+        }).addTo(optiLayers);
+
+        
+        optiData.forEach((stop, index) => {
+            let label = "";
+            let color = "bg-emerald-600";
+            
+            if (index === 0) {
+                label = "START";
+                color = "bg-slate-900";
+            } else if (index === optiData.length - 1) {
+                label = "END";
+                color = "bg-slate-900";
+            } else {
+                label = index; // Hub number 1, 2, 3...
+            }
+
+            const icon = L.divIcon({
+                className: 'opti-marker',
+                html: `<div class="flex items-center justify-center px-2 h-8 ${color} text-white rounded-full border-4 border-white shadow-xl text-[10px] font-black">${label}</div>`,
+                iconSize: [index === 0 || index === optiData.length-1 ? 50 : 32, 32],
+                iconAnchor: [index === 0 || index === optiData.length-1 ? 25 : 16, 16]
+            });
+            L.marker(stop.pos, { icon: icon }).addTo(optiLayers)
+                .bindPopup(`<b class="text-emerald-700 uppercase text-[10px] tracking-widest">${label === "START" || label === "END" ? label : "Etape " + label}</b><br><span class="font-black text-slate-800">${stop.name}</span>`);
+        });
+
+
+        normalLayers.addTo(map); // Default view
+
+
+        // Toggle Logic
+        const btnNormal = document.getElementById('show-normal');
+        const btnOpti = document.getElementById('show-opti');
+
+        btnNormal.onclick = () => {
+            optiLayers.remove();
+            normalLayers.addTo(map);
+            btnNormal.className = "px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-slate-900 text-white shadow-lg";
+            btnOpti.className = "px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400";
+        };
+
+        btnOpti.onclick = () => {
+            normalLayers.remove();
+            optiLayers.addTo(map);
+            btnOpti.className = "px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-600 text-white shadow-lg";
+            btnNormal.className = "px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400";
+        };
+    });
+</script>
+
+<style>
+    .leaflet-popup-content-wrapper { border-radius: 20px !important; padding: 5px !important; }
+    .leaflet-popup-tip { display: none !important; }
+
+    /* Directional Animations */
+    @keyframes dash {
+        to { stroke-dashoffset: -100; }
+    }
+    @keyframes dash-reverse {
+        to { stroke-dashoffset: 100; }
+    }
+
+    .path-outward {
+        animation: dash 5s linear infinite;
+    }
+    .path-return {
+        animation: dash 8s linear infinite;
+        stroke-dashoffset: 0;
+    }
+    .path-optimized {
+        stroke-dasharray: 12;
+        animation: dash 3s linear infinite;
+    }
+</style>
+
+{% endblock %}

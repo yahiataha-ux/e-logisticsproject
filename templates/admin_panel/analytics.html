@@ -1,0 +1,83 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Atlas | Analytics & Carbone{% endblock %}
+{% block header_title %}Analytics de Durabilité & Carbone{% endblock %}
+{% block breadcrumb %}Intelligence / Analytics{% endblock %}
+
+{% block content %}
+<div class="p-10 space-y-10">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <!-- CO2 Chart -->
+        <div class="bg-white p-10 rounded-[40px] shadow-sm border border-slate-100">
+            <h3 class="text-xl font-black text-slate-900 tracking-tight mb-2">Émissions par Zone Géographique</h3>
+            <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-10">Indice de pollution par Hub (Tonnes CO2)</p>
+            <div class="h-[400px]">
+                <canvas id="co2Chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Predictive Analytics Dummy -->
+        <div class="bg-premium-950 p-10 rounded-[40px] shadow-2xl text-white relative overflow-hidden">
+            <div class="relative z-10">
+                <h3 class="text-xl font-black tracking-tight mb-2">Prédictions IA : Réduction Carbone</h3>
+                <p class="text-xs text-premium-500 font-bold uppercase tracking-widest mb-10">Algorithme Dijkstra V2 Projections</p>
+                
+                <div class="space-y-8">
+                    <div class="flex items-center space-x-6">
+                        <div class="text-5xl font-black text-white italic">-32%</div>
+                        <div class="text-xs text-premium-400 font-medium leading-relaxed max-w-[200px]">Réduction potentielle des émissions par optimisation des tournées multi-points.</div>
+                    </div>
+
+                    <div class="p-6 bg-white/5 rounded-3xl border border-white/5">
+                        <h4 class="text-[10px] font-black uppercase tracking-[0.2em] mb-4 text-premium-500">Facteurs d'Optimisation</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-[9px] text-white/40 font-bold uppercase mb-1">Remplissage</p>
+                                <p class="text-lg font-black">+14%</p>
+                            </div>
+                            <div>
+                                <p class="text-[9px] text-white/40 font-bold uppercase mb-1">Trajets vides</p>
+                                <p class="text-lg font-black">-22%</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="w-full mt-12 py-5 bg-premium-500 text-premium-950 text-xs font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-white transition-all">Lancer Optimisation Globale</button>
+            </div>
+            <!-- Decorative circle -->
+            <div class="absolute -top-20 -right-20 w-80 h-80 bg-premium-900 rounded-full blur-3xl opacity-20"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctxCo2 = document.getElementById('co2Chart').getContext('2d');
+        new Chart(ctxCo2, {
+            type: 'bar',
+            data: {
+                labels: {{ co2_labels|safe }},
+                datasets: [{
+                    label: 'Impact CO2 (Tonnes)',
+                    data: {{ co2_values|safe }},
+                    backgroundColor: '#15803d',
+                    borderRadius: 12,
+                    barThickness: 40
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: '#F1F5F9' }, ticks: { font: { size: 10 }, color: '#94A3B8' } },
+                    x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#94A3B8' } }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

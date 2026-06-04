@@ -1,0 +1,298 @@
+{% extends 'admin_panel/base.html' %}
+{% load humanize %}
+
+{% block title %}Atlas Analytics | Dashboard{% endblock %}
+
+{% block content %}
+<div class="p-10 space-y-10">
+    <!-- KPI SECTION -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <!-- KPI Card 1 -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Volume Commandes</p>
+            <h3 class="text-2xl font-black text-slate-900 tracking-tighter">{{ total_orders|intcomma }}</h3>
+            <div class="text-[10px] font-bold text-emerald-500 mt-2 bg-emerald-50 px-2 py-0.5 rounded-lg inline-block">+12.5%</div>
+        </div>
+
+        <!-- KPI Card 2 -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Revenus Flux</p>
+            <h3 class="text-2xl font-black text-slate-900 tracking-tighter">{{ total_revenue|intcomma }} MAD</h3>
+            <div class="text-[10px] font-bold text-emerald-500 mt-2 bg-emerald-50 px-2 py-0.5 rounded-lg inline-block">+8.2k</div>
+        </div>
+
+        <!-- KPI Card 3 -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Émissions CO2</p>
+            <h3 class="text-2xl font-black text-slate-900 tracking-tighter">{{ total_co2|floatformat:2|intcomma }} T</h3>
+            <div class="text-[10px] font-bold text-red-500 mt-2 bg-red-50 px-2 py-0.5 rounded-lg inline-block">-2.4%</div>
+        </div>
+
+        <!-- KPI Card 4 -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Livraisons Actives</p>
+            <h3 class="text-2xl font-black text-slate-900 tracking-tighter">{{ active_deliveries|intcomma }}</h3>
+            <div class="text-[10px] font-bold text-amber-500 mt-2 bg-amber-50 px-2 py-0.5 rounded-lg inline-block">LIVE</div>
+        </div>
+
+        <!-- KPI Card 5 (Live Users) -->
+        <a href="#online-users-table" class="bg-emerald-600 p-6 rounded-2xl shadow-lg shadow-emerald-900/20 text-white relative overflow-hidden group">
+            <div class="relative z-10">
+                <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-100 mb-1">En Ligne</p>
+                <h3 class="text-3xl font-black group-hover:scale-110 transition-transform origin-left">{{ online_count }}</h3>
+                <div class="mt-2 flex items-center space-x-1.5">
+                    <div class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
+                    <span class="text-[9px] font-black uppercase tracking-widest text-emerald-100">Monitoring</span>
+                </div>
+            </div>
+            <div class="absolute -bottom-6 -right-6 w-20 h-20 bg-white/10 rounded-full blur-2xl"></div>
+        </a>
+    </div>
+
+    <!-- CHARTS SECTION -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Revenue Chart -->
+        <div class="lg:col-span-2 bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+            <div class="flex justify-between items-center mb-10">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 tracking-tight">Performance des Flux B2B</h3>
+                    <p class="text-xs text-slate-400 font-medium">Analyse comparative volume vs revenus</p>
+                </div>
+                <div class="flex space-x-2">
+                    <div class="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-50 rounded-lg text-[10px] font-bold text-slate-500 uppercase">
+                        <span class="w-2 h-2 rounded-full bg-premium-500"></span>
+                        <span>Volume</span>
+                    </div>
+                    <div class="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-50 rounded-lg text-[10px] font-bold text-slate-500 uppercase">
+                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                        <span>Revenus</span>
+                    </div>
+                </div>
+            </div>
+            <div class="h-[350px]">
+                <canvas id="mainChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Ecosystem Stats -->
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+            <h3 class="text-lg font-bold text-slate-900 tracking-tight mb-8">Écosystème Actif</h3>
+            <div class="space-y-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span class="text-xs font-bold text-slate-600">Entreprises</span>
+                    </div>
+                    <span class="text-sm font-black text-slate-900">{{ companies_count }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                        <span class="text-xs font-bold text-slate-600">Transporteurs</span>
+                    </div>
+                    <span class="text-sm font-black text-slate-900">{{ transporters_count }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        <span class="text-xs font-bold text-slate-600">Clients B2B</span>
+                    </div>
+                    <span class="text-sm font-black text-slate-900">{{ clients_count }}</span>
+                </div>
+                <div class="flex items-center justify-between pt-6 border-t border-slate-50">
+                    <div class="flex items-center space-x-3">
+                        <span class="w-2 h-2 rounded-full bg-premium-500"></span>
+                        <span class="text-xs font-bold text-slate-600">Flotte Active</span>
+                    </div>
+                    <span class="text-sm font-black text-slate-900">{{ vehicles_count }}</span>
+                </div>
+            </div>
+
+            <!-- Hub Performance Chart -->
+            <div class="mt-8 pt-8 border-t border-slate-50">
+                <h3 class="text-sm font-bold text-slate-900 tracking-tight mb-6">Efficacité des Hubs (MAD)</h3>
+                <div class="h-[250px]">
+                    <canvas id="hubChart"></canvas>
+                </div>
+                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-6 text-center">Répartition du Chiffre d'Affaires</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACTIVE USERS TABLE (CONTENU DE LA PHOTO) -->
+    <div id="online-users-table" class="bg-white rounded-[35px] shadow-sm border border-slate-100 overflow-hidden">
+        <div class="p-8 border-b border-slate-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div>
+                <h3 class="text-xl font-black text-slate-900 tracking-tight">Utilisateurs Actifs sur le Réseau</h3>
+                <p class="text-xs text-slate-400 font-medium mt-1">Données mises à jour toutes les secondes • Fenêtre: 2min</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-4 w-full md:w-auto">
+                <select id="roleFilter" onchange="filterActiveUsers()" class="bg-slate-50 border-none rounded-xl px-4 py-2.5 text-[10px] font-black text-slate-500 uppercase tracking-widest focus:ring-1 focus:ring-emerald-500 outline-none">
+                    <option value="">Tous les Profils</option>
+                    <option value="Admin">Admins</option>
+                    <option value="Entreprise">Entreprises</option>
+                    <option value="Transporteur">Transporteurs</option>
+                    <option value="Client">Clients</option>
+                </select>
+                <div class="relative">
+                    <input type="text" id="userSearch" onkeyup="filterActiveUsers()" placeholder="Chercher un partenaire..." class="bg-slate-50 border-none rounded-xl px-10 py-2.5 text-xs outline-none focus:ring-1 focus:ring-emerald-500 w-full md:w-64">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute left-3.5 top-2.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left" id="activeUsersTable">
+                <thead class="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                    <tr>
+                        <th class="px-8 py-5">Identité & Email</th>
+                        <th class="px-8 py-5">Rôle Platform</th>
+                        <th class="px-8 py-5 text-center">Localisation IP</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    {% for u in active_users %}
+                    <tr class="user-row hover:bg-emerald-50/20 transition-all duration-300" data-username="{{ u.username|lower }}" data-email="{{ u.email|lower }}" data-role="{{ u.role }}">
+                        <td class="px-8 py-5">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center font-black text-slate-400 shadow-sm">
+                                    {{ u.username|first|upper }}
+                                </div>
+                                <div>
+                                    <p class="text-sm font-black text-slate-800 leading-none mb-1">{{ u.username }}</p>
+                                    <p class="text-[10px] text-slate-400 font-bold">{{ u.email }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-8 py-5">
+                            <span class="role-badge px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border
+                                {% if u.role == 'Admin' %}bg-emerald-50 text-emerald-600 border-emerald-100
+                                {% elif u.role == 'Entreprise' %}bg-blue-50 text-blue-600 border-blue-100
+                                {% elif u.role == 'Transporteur' %}bg-amber-50 text-amber-600 border-amber-100
+                                {% else %}bg-slate-50 text-slate-600 border-slate-100{% endif %}">
+                                {{ u.role }}
+                            </span>
+                        </td>
+                        <td class="px-8 py-5 text-center font-mono text-[10px] text-slate-500 font-bold">
+                            <div class="flex items-center justify-center space-x-2">
+                                <div class="w-1.5 h-1.5 rounded-full {% if u.last_ip == '127.0.0.1' %}bg-slate-300{% else %}bg-blue-500 animate-pulse{% endif %}"></div>
+                                <span>{{ u.last_ip|default:"---" }}</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-8 py-10 text-center text-slate-400 font-medium text-xs uppercase tracking-widest">Aucun signal réseau actif</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        const mainChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ chart_dates|safe }},
+                datasets: [
+                    {
+                        label: 'Revenus (MAD)',
+                        data: {{ chart_rev|safe }},
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 4,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                    },
+                    {
+                        label: 'Volume (Unités)',
+                        data: {{ chart_count|safe }},
+                        borderColor: '#22c55e',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        borderDash: [5, 5],
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f1f5f9' },
+                        ticks: { font: { size: 10, weight: 'bold' }, color: '#94a3b8' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 10, weight: 'bold' }, color: '#94a3b8' }
+                    }
+                }
+            }
+        });
+
+        // Hub Chart
+        const hubCtx = document.getElementById('hubChart').getContext('2d');
+        new Chart(hubCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ hub_labels|safe }},
+                datasets: [{
+                    label: 'Revenus Hub',
+                    data: {{ hub_values|safe }},
+                    backgroundColor: '#10b981',
+                    borderRadius: 8,
+                    barThickness: 20
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 9 } } },
+                    y: { grid: { display: false }, ticks: { font: { size: 9, weight: 'bold' } } }
+                }
+            }
+        });
+    });
+
+    function copyLoginURL() {
+        const urlInput = document.getElementById('loginURL');
+        urlInput.classList.remove('hidden');
+        urlInput.select();
+        document.execCommand('copy');
+        urlInput.classList.add('hidden');
+        alert('Lien de connexion copié !');
+    }
+
+    function filterActiveUsers() {
+        const search = document.getElementById('userSearch').value.toLowerCase();
+        const role = document.getElementById('roleFilter').value;
+        const rows = document.querySelectorAll('.user-row');
+
+        rows.forEach(row => {
+            const username = row.getAttribute('data-username');
+            const email = row.getAttribute('data-email');
+            const userRole = row.getAttribute('data-role');
+
+            const matchesSearch = username.includes(search) || email.includes(search);
+            const matchesRole = role === "" || userRole === role;
+
+            if (matchesSearch && matchesRole) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    }
+</script>
+{% endblock %}

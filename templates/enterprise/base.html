@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Atlas Enterprise | Dashboard{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        business: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            500: '#3b82f6',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                            950: '#172554',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .img-loading { background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%); background-size: 200% 100%; animation: 1.5s shine linear infinite; }
+        @keyframes shine { to { background-position-x: -200%; } }
+        @media (max-width: 768px) {
+            input, select, textarea { font-size: 16px !important; }
+        }
+    </style>
+</head>
+<body class="bg-[#F8FAFC] flex flex-col h-screen overflow-hidden">
+    {% if request.session.simulated_from_admin_id %}
+    <div class="bg-emerald-600 text-white px-6 py-3 flex justify-between items-center text-[10px] font-black uppercase tracking-[0.2em] sticky top-0 z-[9999] shadow-lg">
+        <div class="flex items-center space-x-3">
+            <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+            <span>Mode Simulation Admin : Agit en tant que {{ request.user.username }} ({{ request.user.role }})</span>
+        </div>
+        <a href="{% url 'admin_panel:logout_as' %}" class="bg-white text-emerald-600 px-4 py-1.5 rounded-xl hover:bg-black hover:text-white transition-all">Retour Admin</a>
+    </div>
+    {% endif %}
+    <div class="flex h-full w-full overflow-hidden">
+    <!-- Sidebar for Desktop -->
+    <aside class="hidden lg:flex w-64 bg-business-950 text-white flex-col">
+        <div class="p-6 border-b border-white/10">
+            <h1 class="text-xl font-bold tracking-tight">Atlas Enterprise</h1>
+            <p class="text-[10px] text-blue-400 font-bold uppercase tracking-widest">Portal Fournisseur</p>
+        </div>
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+            <a href="{% url 'enterprise:dashboard' %}" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/10 {% if request.resolver_match.url_name == 'dashboard' %}bg-white/10{% endif %}">
+                <span class="text-sm font-medium">Tableau de Bord</span>
+            </a>
+            <a href="{% url 'enterprise:products' %}" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/10 {% if request.resolver_match.url_name == 'products' %}bg-white/10{% endif %}">
+                <span class="text-sm font-medium">Mes Produits</span>
+            </a>
+            <a href="{% url 'enterprise:orders' %}" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/10 {% if request.resolver_match.url_name == 'orders' %}bg-white/10{% endif %}">
+                <span class="text-sm font-medium">Suivi Commandes</span>
+            </a>
+            <a href="{% url 'enterprise:carbon' %}" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/10 {% if request.resolver_match.url_name == 'carbon' %}bg-white/10{% endif %}">
+                <span class="text-sm font-medium">Rapports Carbone</span>
+            </a>
+        </nav>
+        <div class="p-6 border-t border-white/10">
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center font-bold">{{ user.username|first|upper }}</div>
+                <div class="text-xs font-bold truncate">{{ user.username }}</div>
+            </div>
+            <a href="{% url 'logout' %}" class="block text-center py-2 bg-red-500/20 text-red-400 rounded-lg text-[10px] font-black uppercase">Déconnexion</a>
+        </div>
+    </aside>
+
+    <!-- Mobile Sidebar -->
+    <div id="mobile-sidebar" class="fixed inset-0 z-[100] lg:hidden hidden">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="toggleSidebar()"></div>
+        <aside class="absolute left-0 top-0 bottom-0 w-72 bg-business-950 text-white flex flex-col shadow-2xl transform transition-transform duration-300">
+            <div class="p-6 border-b border-white/10 flex justify-between items-center">
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight">Atlas Enterprise</h1>
+                    <p class="text-[10px] text-blue-400 font-bold uppercase tracking-widest">Portal Fournisseur</p>
+                </div>
+                <button onclick="toggleSidebar()" class="text-white/50 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+                <a href="{% url 'enterprise:dashboard' %}" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/10 {% if request.resolver_match.url_name == 'dashboard' %}bg-white/10{% endif %}">
+                    <span class="text-sm font-medium">Tableau de Bord</span>
+                </a>
+                <a href="{% url 'enterprise:products' %}" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/10 {% if request.resolver_match.url_name == 'products' %}bg-white/10{% endif %}">
+                    <span class="text-sm font-medium">Mes Produits</span>
+                </a>
+                <a href="{% url 'enterprise:orders' %}" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/10 {% if request.resolver_match.url_name == 'orders' %}bg-white/10{% endif %}">
+                    <span class="text-sm font-medium">Suivi Commandes</span>
+                </a>
+                <a href="{% url 'enterprise:carbon' %}" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/10 {% if request.resolver_match.url_name == 'carbon' %}bg-white/10{% endif %}">
+                    <span class="text-sm font-medium">Rapports Carbone</span>
+                </a>
+            </nav>
+            <div class="p-6 border-t border-white/10">
+                <a href="{% url 'logout' %}" class="block text-center py-4 bg-red-500/20 text-red-400 rounded-xl text-xs font-black uppercase tracking-widest">Déconnexion</a>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Content Area -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <header class="h-16 bg-white border-b border-slate-200 px-4 lg:px-8 flex items-center justify-between flex-shrink-0">
+            <div class="flex items-center space-x-4">
+                <button onclick="toggleSidebar()" class="lg:hidden p-2 text-slate-400 hover:text-slate-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                </button>
+                <h2 class="text-sm lg:text-lg font-bold text-slate-800">{% block header_title %}Espace Entreprise{% endblock %}</h2>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="hidden sm:flex bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">Actif</div>
+                <div class="lg:hidden w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center font-bold text-white text-xs">{{ user.username|first|upper }}</div>
+            </div>
+        </header>
+        <main class="flex-1 overflow-y-auto bg-slate-50 p-4 lg:p-8">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('mobile-sidebar');
+            sidebar.classList.toggle('hidden');
+        }
+        // Fallback for broken images
+        document.addEventListener('error', function (e) {
+            if (e.target.tagName.toLowerCase() === 'img') {
+                e.target.src = 'https://loremflickr.com/800/600/morocco,business?lock=' + Math.random();
+            }
+        }, true);
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

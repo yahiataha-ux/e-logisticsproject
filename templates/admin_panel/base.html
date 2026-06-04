@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Atlas Logistics | Admin Panel{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        premium: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                            950: '#052e16',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Segoe UI', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .active-menu { background-color: rgba(255,255,255,0.1); border-left: 4px solid #22c55e; }
+        @media (max-width: 768px) {
+            input, select, textarea { font-size: 16px !important; }
+            .lg-hide { display: none; }
+        }
+    </style>
+</head>
+<body class="bg-[#F8FAFC] text-slate-800 font-sans antialiased h-screen flex flex-col overflow-hidden">
+    {% if request.session.simulated_from_admin_id %}
+    <div class="bg-emerald-600 text-white px-6 py-3 flex justify-between items-center text-[10px] font-black uppercase tracking-[0.2em] sticky top-0 z-[9999] shadow-lg">
+        <div class="flex items-center space-x-3">
+            <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+            <span>Mode Simulation Admin : Agit en tant que {{ request.user.username }} ({{ request.user.role }})</span>
+        </div>
+        <a href="{% url 'admin_panel:logout_as' %}" class="bg-white text-emerald-600 px-4 py-1.5 rounded-xl hover:bg-black hover:text-white transition-all">Retour Admin</a>
+    </div>
+    {% endif %}
+    <div class="flex h-full w-full overflow-hidden">
+
+    <!-- Mobile Sidebar Backdrop & Sidebar -->
+    <div id="admin-mobile-sidebar" class="fixed inset-0 z-[100] lg:hidden hidden">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="toggleAdminSidebar()"></div>
+        <aside class="absolute left-0 top-0 bottom-0 w-72 bg-premium-950 text-white flex flex-col shadow-2xl transform transition-transform duration-300 border-r border-premium-900">
+            <div class="p-8 border-b border-premium-900/50 flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-premium-500 rounded flex items-center justify-center">
+                        <span class="text-white font-black text-lg italic">A</span>
+                    </div>
+                    <h1 class="text-lg font-extrabold tracking-tighter uppercase leading-none">Atlas Admin</h1>
+                </div>
+                <button onclick="toggleAdminSidebar()" class="text-white/50 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <nav class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-2">
+                <a href="{% url 'admin_panel:dashboard' %}" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/5">
+                    <span class="text-sm font-medium">Tableau de Bord</span>
+                </a>
+                <a href="{% url 'admin_panel:users' %}" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/5">
+                    <span class="text-sm font-medium">Accès et Profils</span>
+                </a>
+                <a href="{% url 'admin_panel:orders' %}" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/5">
+                    <span class="text-sm font-medium">Commandes</span>
+                </a>
+                <a href="{% url 'admin_panel:monitoring' %}" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/5">
+                    <span class="text-sm font-medium">Monitoring</span>
+                </a>
+                <div class="pt-4 mt-4 border-t border-white/5">
+                    <a href="{% url 'logout' %}" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-red-500/10 text-red-400">
+                        <span class="text-sm font-medium">Déconnexion</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+    </div>
+
+    <!-- Sidebar for Desktop -->
+    <aside class="hidden lg:flex w-72 bg-premium-950 text-white flex-col h-full flex-shrink-0 border-r border-premium-900 shadow-2xl z-50">
+        <!-- Logo Section -->
+        <div class="p-8 border-b border-premium-900/50">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-premium-500 rounded-lg flex items-center justify-center shadow-lg shadow-premium-500/20">
+                    <span class="text-white font-black text-xl italic">A</span>
+                </div>
+                <div>
+                    <h1 class="text-lg font-extrabold tracking-tighter uppercase leading-none">Atlas Logistics</h1>
+                    <span class="text-[10px] text-premium-500 font-bold uppercase tracking-[0.2em]">SaaS Supply Chain</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Section -->
+        <nav class="flex-1 overflow-y-auto custom-scrollbar py-6">
+            <div class="px-6 space-y-1">
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-4 px-2">Supervision</p>
+                <a href="{% url 'admin_panel:dashboard' %}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all hover:bg-white/5 {% if request.resolver_match.url_name == 'dashboard' %}active-menu{% endif %}">
+                    <div class="w-1.5 h-1.5 rounded-full bg-premium-500"></div>
+                    <span class="text-sm font-medium">Tableau de Bord</span>
+                </a>
+
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-8 mb-4 px-2">Gestion Opérationnelle</p>
+                <a href="{% url 'admin_panel:orders' %}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all hover:bg-white/5 {% if request.resolver_match.url_name == 'orders' %}active-menu{% endif %}">
+                    <span class="text-sm font-medium">Commandes</span>
+                </a>
+                <a href="{% url 'admin_panel:hubs' %}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all hover:bg-white/5 {% if request.resolver_match.url_name == 'hubs' %}active-menu{% endif %}">
+                    <span class="text-sm font-medium">Gestion des Hubs</span>
+                </a>
+                <a href="{% url 'admin_panel:warehouse' %}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all hover:bg-white/5 {% if request.resolver_match.url_name == 'warehouse' %}active-menu{% endif %}">
+                    <span class="text-sm font-medium">Gestion Entrepôt (Planogramme)</span>
+                </a>
+                <a href="{% url 'admin_panel:monitoring' %}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all hover:bg-white/5 {% if request.resolver_match.url_name == 'monitoring' %}active-menu{% endif %}">
+                    <span class="text-sm font-medium">Monitoring Logistique</span>
+                </a>
+                <a href="{% url 'admin_panel:flux' %}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all hover:bg-white/5 {% if request.resolver_match.url_name == 'flux' %}active-menu{% endif %}">
+                    <span class="text-sm font-medium">Performance & KPIs</span>
+                </a>
+
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-8 mb-4 px-2">Écosystème</p>
+                <a href="{% url 'admin_panel:users' %}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all hover:bg-white/5 {% if request.resolver_match.url_name == 'users' %}active-menu{% endif %}">
+                    <span class="text-sm font-medium">Accès et Profils</span>
+                </a>
+                <a href="{% url 'admin_panel:companies' %}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all hover:bg-white/5 {% if request.resolver_match.url_name == 'companies' %}active-menu{% endif %}">
+                    <span class="text-sm font-medium">Entreprises</span>
+                </a>
+                <a href="{% url 'admin_panel:transporters' %}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all hover:bg-white/5 {% if request.resolver_match.url_name == 'transporters' %}active-menu{% endif %}">
+                    <span class="text-sm font-medium">Partenaires Transport</span>
+                </a>
+
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-8 mb-4 px-2">Intelligence & Système</p>
+                <a href="{% url 'admin_panel:analytics' %}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all hover:bg-white/5 {% if request.resolver_match.url_name == 'analytics' %}active-menu{% endif %}">
+                    <span class="text-sm font-medium">Analytics et Carbone</span>
+                </a>
+                <a href="{% url 'admin_panel:settings' %}" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all hover:bg-white/5 {% if request.resolver_match.url_name == 'settings' %}active-menu{% endif %}">
+                    <span class="text-sm font-medium">Paramètres Plateforme</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Profile Section -->
+        <div class="p-6 bg-premium-950 border-t border-premium-900/50">
+            <div class="flex items-center space-x-3 mb-6 px-2">
+                <div class="w-10 h-10 rounded-full bg-premium-800 border border-premium-700 flex items-center justify-center font-bold text-premium-500 shadow-inner text-sm">
+                    {{ user.username|first|upper }}
+                </div>
+                <div class="overflow-hidden">
+                    <p class="text-sm font-bold truncate leading-none mb-1">{{ user.username }}</p>
+                    <div class="flex items-center space-x-1.5">
+                        <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Online</span>
+                    </div>
+                </div>
+            </div>
+            <a href="{% url 'logout' %}" class="flex items-center justify-center w-full bg-white/5 hover:bg-red-500/10 hover:text-red-400 text-slate-400 font-bold text-[11px] uppercase tracking-widest py-3 rounded-lg border border-white/5 transition-all">
+                Déconnexion
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden">
+        <!-- Top Navbar -->
+        <header class="h-20 bg-white border-b border-slate-200 px-4 lg:px-10 flex items-center justify-between flex-shrink-0 z-40">
+            <div class="flex items-center space-x-4">
+                <button onclick="toggleAdminSidebar()" class="lg:hidden p-2 text-slate-400 hover:text-slate-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                </button>
+                <div>
+                    <h2 class="text-sm lg:text-lg font-bold text-slate-900 tracking-tight">{% block header_title %}Tableau de Bord Exécutif{% endblock %}</h2>
+                    <div class="hidden sm:flex items-center text-xs text-slate-400 space-x-2 mt-0.5">
+                        <span>Atlas Platform</span>
+                        <span>/</span>
+                        <span class="text-slate-500 font-medium tracking-wide">{% block breadcrumb %}Admin{% endblock %}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4 lg:space-x-6">
+                <!-- Notifications Dummy -->
+                <div class="hidden sm:block relative cursor-pointer hover:bg-slate-50 p-2 rounded-full transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    <span class="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-white text-[10px] font-black flex items-center justify-center rounded-full border-2 border-white shadow-sm">3</span>
+                </div>
+                <div class="hidden sm:block h-8 w-px bg-slate-200"></div>
+                <div class="text-right">
+                    <p class="text-xs lg:text-sm font-extrabold text-slate-800 tracking-tight leading-none mb-1">Session Active</p>
+                    <p class="text-[9px] lg:text-[10px] text-premium-700 font-bold uppercase tracking-wider">Administrateur</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <main class="flex-1 overflow-y-auto custom-scrollbar bg-[#F8FAFC] relative">
+            {% if messages %}
+            <div class="fixed top-24 right-10 z-[9999] space-y-4 max-w-sm w-full">
+                {% for message in messages %}
+                <div class="p-4 rounded-2xl shadow-2xl border backdrop-blur-xl animate-bounce-short
+                    {% if message.tags == 'success' %}bg-emerald-500/90 text-white border-emerald-400
+                    {% elif message.tags == 'error' %}bg-red-500/90 text-white border-red-400
+                    {% else %}bg-slate-800/90 text-white border-slate-700{% endif %}">
+                    <div class="flex items-center space-x-3">
+                        {% if message.tags == 'success' %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                        {% endif %}
+                        <p class="text-xs font-black uppercase tracking-widest">{{ message }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <script>
+                setTimeout(() => {
+                    const msgs = document.querySelectorAll('.animate-bounce-short');
+                    msgs.forEach(m => m.classList.add('opacity-0', 'transition-opacity', 'duration-500'));
+                    setTimeout(() => msgs.forEach(m => m.remove()), 500);
+                }, 4000);
+            </script>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+        function toggleAdminSidebar() {
+            const sidebar = document.getElementById('admin-mobile-sidebar');
+            sidebar.classList.toggle('hidden');
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

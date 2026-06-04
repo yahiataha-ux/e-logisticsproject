@@ -1,0 +1,126 @@
+{% extends 'client/base.html' %}
+{% load humanize %}
+
+{% block title %}Marketplace | Atlas{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="bg-luxury-900 text-white py-20 lg:py-32 px-4 lg:px-6">
+    <div class="container mx-auto max-w-4xl text-center">
+        <h1 class="text-3xl sm:text-4xl lg:text-6xl font-black tracking-tighter mb-6 leading-tight lg:leading-none">L'Excellence du Terroir Marocain <span class="text-luxury-gold">Optimisée</span>.</h1>
+        <p class="text-slate-400 text-sm lg:text-lg font-light leading-relaxed px-4">Découvrez une sélection premium de produits nationaux avec une livraison à faible empreinte carbone.</p>
+    </div>
+</div>
+
+<!-- AI Ranking Controls -->
+<div class="container mx-auto px-4 lg:px-6 -mt-8 lg:-mt-10 mb-12">
+    <div class="bg-white/90 backdrop-blur-xl p-6 lg:p-8 rounded-[32px] border border-white shadow-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 bg-emerald-500 rounded-2xl flex-shrink-0 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+            </div>
+            <div>
+                <p class="text-[9px] lg:text-xs font-black uppercase tracking-widest text-slate-400">Algorithme Atlas IA</p>
+                <p class="text-md lg:text-lg font-black text-slate-900">Suggestions Classées par <span class="text-emerald-500">Performance</span></p>
+            </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="w-full lg:w-auto text-[10px] font-black uppercase text-slate-400 lg:mr-2">Trier par :</span>
+            <button onclick="sortProducts('score')" id="btn-sort-score" class="flex-1 lg:flex-none px-4 lg:px-6 py-3 bg-luxury-900 text-white rounded-xl text-[9px] lg:text-[10px] font-black uppercase tracking-widest shadow-xl transition-all">Score</button>
+            <button onclick="sortProducts('price')" id="btn-sort-price" class="flex-1 lg:flex-none px-4 lg:px-6 py-3 bg-slate-100 text-slate-400 rounded-xl text-[9px] lg:text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Prix</button>
+            <button onclick="sortProducts('co2')" id="btn-sort-co2" class="flex-1 lg:flex-none px-4 lg:px-6 py-3 bg-slate-100 text-slate-400 rounded-xl text-[9px] lg:text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">CO2</button>
+        </div>
+    </div>
+</div>
+
+<!-- Products -->
+<div class="container mx-auto px-6">
+    <div id="products-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+        {% for p in products %}
+        <div class="product-card bg-white p-2 rounded-[32px] shadow-2xl shadow-black/5 group hover:-translate-y-2 transition-all duration-500 border border-slate-100"
+             data-price="{{ p.price }}" 
+             data-co2="{{ p.co2_impact }}" 
+             data-score="{{ p.performance_score }}">
+            <div class="h-64 bg-slate-100 rounded-[28px] overflow-hidden relative">
+                <img src="{{ p.get_dynamic_image }}" 
+                     alt="{{ p.name }}" 
+                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                     style="display: block; min-height: 256px;">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                <span class="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-slate-900 shadow-xl">{{ p.category }}</span>
+                
+                <!-- AI Score Badge -->
+                <div class="absolute top-4 right-4 bg-{{ p.impact_color }}-500 text-white px-4 py-2 rounded-2xl shadow-lg border border-{{ p.impact_color }}-400/50 flex flex-col items-center">
+                    <span class="text-[8px] font-black uppercase tracking-tighter leading-none opacity-80">Impact ECO</span>
+                    <span class="text-xl font-black leading-none">{{ p.performance_index }}%</span>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-6">
+                    <h3 class="text-xl font-black tracking-tighter leading-tight w-2/3">{{ p.name }}</h3>
+                    <div class="text-right">
+                        <p class="text-2xl font-black text-luxury-gold leading-none">{{ p.price|intcomma }}</p>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">MAD</p>
+                    </div>
+                </div>
+                
+                <!-- Logistics Metrics -->
+                <div class="grid grid-cols-2 gap-4 mb-8 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <div class="flex flex-col">
+                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Impact CO2</span>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-lg font-black text-emerald-600">{{ p.co2_impact|floatformat:1 }}</span>
+                            <span class="text-[8px] font-bold text-slate-400">kg</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col border-l border-slate-200 pl-4">
+                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Disponibilité</span>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-lg font-black text-slate-900">{{ p.stock }}</span>
+                            <span class="text-[8px] font-bold text-slate-400">UNITÉS</span>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if p.stock > 0 %}
+                <a href="{% url 'client:place_order' p.id %}" class="group relative block w-full overflow-hidden rounded-2xl bg-luxury-900 p-5 text-center transition-all hover:bg-black">
+                    <span class="relative z-10 text-[11px] font-black uppercase tracking-widest text-white">Lancer la Commande Optimisée</span>
+                    <div class="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-1000 group-hover:translate-x-full"></div>
+                </a>
+                {% else %}
+                <div class="block w-full rounded-2xl bg-slate-100 p-5 text-center cursor-not-allowed">
+                    <span class="text-[11px] font-black uppercase tracking-widest text-slate-400">Rupture de Stock</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    function sortProducts(criteria) {
+        const grid = document.getElementById('products-grid');
+        const cards = Array.from(grid.getElementsByClassName('product-card'));
+        
+        cards.sort((a, b) => {
+            const valA = parseFloat(a.getAttribute(`data-${criteria}`));
+            const valB = parseFloat(b.getAttribute(`data-${criteria}`));
+            return valA - valB; // Ascending order (lower price/co2 is better)
+        });
+        
+        // Re-append cards in new order
+        cards.forEach(card => grid.appendChild(card));
+        
+        // Update button styles
+        ['score', 'price', 'co2'].forEach(c => {
+            const btn = document.getElementById(`btn-sort-${c}`);
+            if (c === criteria) {
+                btn.className = "px-6 py-3 bg-luxury-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl transition-all";
+            } else {
+                btn.className = "px-6 py-3 bg-slate-100 text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all";
+            }
+        });
+    }
+</script>
+{% endblock %}

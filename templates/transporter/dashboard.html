@@ -1,0 +1,68 @@
+{% extends 'transporter/base.html' %}
+{% load humanize %}
+
+{% block title %}Ops Dashboard | Atlas{% endblock %}
+
+{% block content %}
+<div class="p-8 space-y-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-slate-800 p-6 rounded-3xl border border-white/5">
+            <p class="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Gains Totaux</p>
+            <h3 class="text-2xl font-black text-ops-500">{{ total_earned|intcomma }} MAD</h3>
+        </div>
+        <div class="bg-slate-800 p-6 rounded-3xl border border-white/5">
+            <p class="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Distance Parcourue</p>
+            <h3 class="text-2xl font-black text-white">{{ total_distance|floatformat:1|intcomma }} km</h3>
+        </div>
+        <div class="bg-slate-800 p-6 rounded-3xl border border-white/5">
+            <p class="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Emissions CO2</p>
+            <h3 class="text-2xl font-black text-emerald-500">{{ total_co2|floatformat:2|intcomma }} T</h3>
+        </div>
+        <div class="bg-ops-500 p-6 rounded-3xl text-ops-950 shadow-xl shadow-ops-500/10">
+            <p class="text-[10px] font-black uppercase tracking-widest mb-1">Missions Actives</p>
+            <h3 class="text-2xl font-black">{{ active_missions|intcomma }}</h3>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Live Map Preview -->
+        <div class="bg-white rounded-3xl border border-slate-100 overflow-hidden h-[400px] relative">
+            <div id="mini-map" class="w-full h-full opacity-80"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-white/20 to-transparent pointer-events-none"></div>
+            <div class="absolute bottom-8 left-8 z-10">
+                <h4 class="text-lg font-black tracking-tighter text-slate-900">Monitoring Flotte</h4>
+                <p class="text-[10px] text-ops-700 font-black uppercase tracking-widest">Temps Réel Actif</p>
+            </div>
+            <a href="{% url 'transporter:map' %}" class="absolute bottom-8 right-8 z-10 bg-slate-900 text-white px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest hover:scale-110 transition-all">Agrandir</a>
+        </div>
+
+
+        <!-- Mission List -->
+        <div class="bg-slate-800 p-8 rounded-3xl border border-white/5">
+            <h3 class="text-lg font-black mb-8 tracking-tighter">Journal des Missions</h3>
+            <div class="space-y-4">
+                {% for m in missions %}
+                <div class="p-6 bg-slate-900/50 rounded-2xl border border-white/5 flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-1.5 h-10 rounded-full {% if m.status == 'Terminée' %}bg-emerald-500{% else %}bg-ops-500 animate-pulse{% endif %}"></div>
+                        <div>
+                            <p class="text-sm font-black text-white">{{ m.status }}</p>
+                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{{ m.distance|floatformat:1|intcomma }} km • {{ m.remuneration|intcomma }} MAD</p>
+                        </div>
+                    </div>
+                    <button class="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">Détails</button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const map = L.map('mini-map', { zoomControl: false, attributionControl: false }).setView([31.7917, -7.0926], 5);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Atlas | Paramètres{% endblock %}
+{% block header_title %}Configuration du Système & Sécurité{% endblock %}
+{% block breadcrumb %}Système / Paramètres{% endblock %}
+
+{% block content %}
+<div class="p-10 space-y-8">
+    <div
+        class="bg-white p-12 rounded-[40px] shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center">
+        <div class="w-20 h-20 bg-slate-50 text-slate-300 rounded-[30px] flex items-center justify-center mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+            </svg>
+        </div>
+        <h3 class="text-2xl font-black text-slate-900 tracking-tight mb-2">Configuration Système Atlas V4.2</h3>
+        <p class="text-sm text-slate-400 max-w-md font-medium leading-relaxed">Les paramètres de sécurité, d'API et de
+            calibration de l'IA sont verrouillés pour la version de production.</p>
+
+        <!-- QR CODE SECTION -->
+        <div class="mt-12 p-10 bg-slate-50 rounded-[32px] border border-slate-100 flex flex-col items-center">
+            <h4 class="text-sm font-black text-slate-900 uppercase tracking-widest mb-6">Accès Mobile Rapide</h4>
+            <div class="bg-white p-6 rounded-3xl shadow-xl mb-6">
+                <img src="{{ qr_code }}" alt="QR Code Login" class="w-48 h-48">
+            </div>
+            <p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest text-center max-w-xs">Scannez ce
+                code avec votre smartphone pour accéder au portail login sur le réseau local.</p>
+            <p
+                class="mt-4 text-[10px] font-black text-premium-700 bg-premium-50 px-4 py-1 rounded-full border border-premium-100">
+                {{ login_url }}</p>
+        </div>
+
+        <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-xl text-left">
+            <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Algorithme</p>
+                <p class="text-sm font-bold text-slate-800">Dijkstra Neural Path</p>
+            </div>
+            <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Sécurité</p>
+                <p class="text-sm font-bold text-slate-800">AES-256 / RBAC Strict</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

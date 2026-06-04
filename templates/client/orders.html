@@ -1,0 +1,43 @@
+{% extends 'client/base.html' %}
+
+{% block title %}Mes Commandes | Atlas Marketplace{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-6 py-20">
+    <div class="max-w-4xl mx-auto">
+        <h2 class="text-4xl font-black tracking-tighter mb-12">Journal de Bord <span class="text-luxury-gold">Logistique</span>.</h2>
+        
+        <div class="space-y-6">
+            {% for o in orders %}
+            <div class="bg-white p-8 rounded-[32px] border border-slate-100 shadow-xl shadow-black/5 flex flex-col md:flex-row md:items-center justify-between gap-8 group">
+                <div class="flex items-center space-x-6">
+                    <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-luxury-gold border border-slate-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-black tracking-tight leading-none mb-2">{{ o.product.name }}</h4>
+                        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">{{ o.order_date|date:"d F Y" }}</p>
+                    </div>
+                </div>
+
+                <div class="flex flex-col md:items-center">
+                    <span class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Statut</span>
+                    <span class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest {% if o.status == 'Livrée' %}bg-emerald-50 text-emerald-600{% else %}bg-amber-50 text-amber-600 animate-pulse{% endif %}">
+                        {{ o.status }}
+                    </span>
+                </div>
+
+                <div class="text-right">
+                    <p class="text-xl font-light italic text-luxury-900 mb-1">{{ o.price_total }} <span class="text-[10px] font-black not-italic text-slate-400">MAD</span></p>
+                    <a href="{% url 'client:tracking' o.id %}" class="text-[10px] font-black uppercase tracking-widest text-luxury-gold hover:underline">Suivre le colis</a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-20 bg-slate-50 rounded-[40px] border border-dashed border-slate-200">
+                <p class="text-slate-400 font-light italic">Aucune commande active pour le moment.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

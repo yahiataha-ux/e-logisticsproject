@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - Atlas Logistics</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            700: '#15803d',
+                            900: '#14532d',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased overflow-y-auto">
+    <div class="min-h-screen py-10 flex items-center justify-center relative">
+        <!-- Background Image -->
+        <div class="absolute inset-0 z-0">
+            <img src="https://images.unsplash.com/photo-1473448912268-2022ce9509d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80" alt="Logistics Background" class="w-full h-full object-cover" />
+            <div class="absolute inset-0 bg-gray-50/90 backdrop-blur-sm"></div>
+        </div>
+
+        <!-- Login Form -->
+        <div class="relative z-10 w-full max-w-md">
+            <div class="text-center mb-10">
+                <h1 class="text-4xl font-extrabold text-brand-900 tracking-tight drop-shadow-sm">Atlas Logistics Platform</h1>
+                <p class="text-gray-600 mt-3 font-medium text-lg">Système d'optimisation Supply Chain & ERP Logistique</p>
+            </div>
+
+            <div class="bg-white/95 backdrop-blur-md p-8 rounded-xl shadow-2xl border border-white/50">
+                <h3 class="text-xl font-bold text-brand-900 text-center mb-2">Authentification SaaS</h3>
+                <p class="text-gray-500 text-sm text-center mb-8">Accès sécurisé à l'environnement de production.</p>
+
+                <form method="post" action="{% url 'login' %}">
+                    {% csrf_token %}
+                    <div class="mb-5">
+                        <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Email ou Nom d'utilisateur</label>
+                        <input type="text" name="username" id="username" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-500 focus:border-brand-500 outline-none transition-shadow" placeholder="ex: admin" required>
+                    </div>
+                    <div class="mb-6">
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
+                        <input type="password" name="password" id="password" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-500 focus:border-brand-500 outline-none transition-shadow" placeholder="Votre mot de passe" required>
+                    </div>
+                    
+                    {% if form.errors %}
+                    <div class="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-200">
+                        Identifiants incorrects ou compte suspendu.
+                    </div>
+                    {% endif %}
+
+                    <button type="submit" class="w-full bg-brand-700 hover:bg-brand-900 text-white font-semibold py-3 rounded-md transition-colors shadow-lg hover:shadow-xl">
+                        Connexion Sécurisée
+                    </button>
+                </form>
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-gray-500">
+                        Nouveau partenaire ? <a href="{% url 'register' %}" class="text-brand-700 font-bold hover:underline">Créer un compte</a>
+                    </p>
+                </div>
+            </div>
+            
+            <div class="text-center mt-10">
+                <p class="text-gray-500 text-sm font-medium">© 2026 Atlas Logistics Morocco. Opérations Neutres en Carbone.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

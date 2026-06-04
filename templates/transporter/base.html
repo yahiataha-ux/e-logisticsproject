@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Atlas Transporter | Ops Dashboard{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ops: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            500: '#f59e0b',
+                            700: '#b45309',
+                            900: '#78350f',
+                            950: '#451a03',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        @media (max-width: 768px) {
+            input, select, textarea { font-size: 16px !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white flex flex-col h-screen overflow-hidden">
+    {% if request.session.simulated_from_admin_id %}
+    <div class="bg-emerald-600 text-white px-6 py-3 flex justify-between items-center text-[10px] font-black uppercase tracking-[0.2em] sticky top-0 z-[9999] shadow-lg">
+        <div class="flex items-center space-x-3">
+            <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+            <span>Mode Simulation Admin : Agit en tant que {{ request.user.username }} ({{ request.user.role }})</span>
+        </div>
+        <a href="{% url 'admin_panel:logout_as' %}" class="bg-white text-emerald-600 px-4 py-1.5 rounded-xl hover:bg-black hover:text-white transition-all">Retour Admin</a>
+    </div>
+    {% endif %}
+    <div class="flex h-full w-full overflow-hidden">
+    <!-- Sidebar for Desktop -->
+    <aside class="hidden lg:flex w-64 bg-ops-950 flex-col border-r border-white/5 shadow-2xl">
+        <div class="p-6 border-b border-white/5">
+            <h1 class="text-xl font-black italic tracking-tighter">Atlas <span class="text-ops-500">Ops</span></h1>
+            <p class="text-[10px] text-ops-500/50 font-bold uppercase tracking-widest">Logistics Network</p>
+        </div>
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+            <a href="{% url 'transporter:dashboard' %}" class="flex items-center space-x-3 p-3 rounded-2xl hover:bg-white/5 {% if request.resolver_match.url_name == 'dashboard' %}bg-white/10{% endif %}">
+                <span class="text-sm font-bold uppercase tracking-widest">Missions</span>
+            </a>
+            <a href="{% url 'transporter:planning' %}" class="flex items-center space-x-3 p-3 rounded-2xl hover:bg-white/5 {% if request.resolver_match.url_name == 'planning' %}bg-white/10{% endif %}">
+                <span class="text-sm font-bold uppercase tracking-widest text-ops-500">Planning & Ordo</span>
+            </a>
+            <a href="{% url 'transporter:map' %}" class="flex items-center space-x-3 p-3 rounded-2xl hover:bg-white/5 {% if request.resolver_match.url_name == 'map' %}bg-white/10{% endif %}">
+                <span class="text-sm font-bold uppercase tracking-widest">Carte Live</span>
+            </a>
+            <div class="pt-8 opacity-20 border-t border-white/10"></div>
+            <a href="{% url 'transporter:fleet' %}" class="flex items-center space-x-3 p-3 rounded-2xl hover:bg-white/5 {% if request.resolver_match.url_name == 'fleet' %}bg-white/10{% endif %}">
+                <span class="text-sm font-bold uppercase tracking-widest">Ma Flotte</span>
+            </a>
+            <a href="{% url 'transporter:revenues' %}" class="flex items-center space-x-3 p-3 rounded-2xl hover:bg-white/5 {% if request.resolver_match.url_name == 'revenues' %}bg-white/10{% endif %}">
+                <span class="text-sm font-bold uppercase tracking-widest">Revenus</span>
+            </a>
+        </nav>
+        <div class="p-6 border-t border-white/5">
+            <a href="{% url 'logout' %}" class="block text-center py-4 bg-red-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-red-900/20">Quitter</a>
+        </div>
+    </aside>
+
+    <!-- Mobile Sidebar -->
+    <div id="ops-mobile-sidebar" class="fixed inset-0 z-[100] lg:hidden hidden">
+        <div class="absolute inset-0 bg-slate-900/90 backdrop-blur-md" onclick="toggleOpsSidebar()"></div>
+        <aside class="absolute left-0 top-0 bottom-0 w-72 bg-ops-950 text-white flex flex-col shadow-2xl transform transition-transform duration-300 border-r border-white/5">
+            <div class="p-6 border-b border-white/5 flex justify-between items-center">
+                <h1 class="text-xl font-black italic tracking-tighter">Atlas <span class="text-ops-500">Ops</span></h1>
+                <button onclick="toggleOpsSidebar()" class="text-white/50 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <nav class="flex-1 p-4 space-y-4 overflow-y-auto">
+                <a href="{% url 'transporter:dashboard' %}" class="block p-4 bg-white/5 rounded-2xl text-sm font-bold uppercase tracking-widest">Missions</a>
+                <a href="{% url 'transporter:planning' %}" class="block p-4 bg-white/5 rounded-2xl text-sm font-bold uppercase tracking-widest text-ops-500">Planning</a>
+                <a href="{% url 'transporter:map' %}" class="block p-4 bg-white/5 rounded-2xl text-sm font-bold uppercase tracking-widest">Carte Live</a>
+                <a href="{% url 'transporter:fleet' %}" class="block p-4 bg-white/5 rounded-2xl text-sm font-bold uppercase tracking-widest">Flotte</a>
+            </nav>
+            <div class="p-6">
+                <a href="{% url 'logout' %}" class="block text-center py-4 bg-red-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest">Déconnexion</a>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Main -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <header class="h-16 bg-slate-900 border-b border-white/5 flex items-center justify-between px-4 lg:px-8 flex-shrink-0">
+            <div class="flex items-center space-x-4">
+                <button onclick="toggleOpsSidebar()" class="lg:hidden p-2 text-slate-400 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                </button>
+                <div class="flex items-center space-x-3">
+                    <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <span class="hidden sm:inline text-[10px] font-black uppercase tracking-widest text-slate-400">Statut: En Service</span>
+                </div>
+            </div>
+            <div class="text-xs lg:text-sm font-black text-ops-500">{{ user.username|upper }}</div>
+        </header>
+        <main class="flex-1 overflow-y-auto bg-slate-900/50">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+        function toggleOpsSidebar() {
+            const sidebar = document.getElementById('ops-mobile-sidebar');
+            sidebar.classList.toggle('hidden');
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

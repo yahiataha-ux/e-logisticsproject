@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Atlas Logistics{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<div class="p-8 h-full flex flex-col">
+    <div class="mb-6 flex justify-between items-end">
+        <div>
+            <h2 class="text-3xl font-bold text-brand-900 tracking-tight">Monitoring Logistique & Dijkstra Roads</h2>
+            <p class="text-gray-500 mt-2 font-medium">Visualisation des chemins réels optimisés par algorithme sur le réseau routier marocain.</p>
+        </div>
+        <div class="flex space-x-6 bg-white p-3 rounded-lg shadow-sm border border-gray-100">
+            <div class="flex items-center text-xs">
+                <span class="w-3 h-3 rounded-full bg-brand-900 mr-2"></span>
+                <span class="text-gray-600 font-bold uppercase">Hubs</span>
+            </div>
+            <div class="flex items-center text-xs">
+                <span class="w-3 h-3 rounded-full bg-blue-500 mr-2"></span>
+                <span class="text-gray-600 font-bold uppercase">Clients</span>
+            </div>
+            <div class="flex items-center text-xs">
+                <span class="w-8 h-1 bg-brand-500/50 rounded mr-2"></span>
+                <span class="text-gray-400 font-bold uppercase">Réseau Routier</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex-1 min-h-[500px] bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden relative">
+        <div id="map" class="w-full h-full z-10"></div>
+        
+        <div class="absolute bottom-6 left-6 z-[1000] bg-white/90 backdrop-blur-md p-6 rounded-xl shadow-2xl border border-white/50 max-w-xs">
+            <h4 class="font-extrabold text-brand-900 text-sm uppercase tracking-wider mb-2">Vérification Géographique</h4>
+            <p class="text-[10px] text-gray-500 leading-relaxed mb-4">Système de validation "On-Land" actif. Tous les Hubs et Clients sont positionnés hors des zones maritimes pour une précision logistique maximale.</p>
+            <div class="flex items-center justify-between text-xs mb-1">
+                <span class="text-gray-500">Précision Dijkstra</span>
+                <span class="font-bold text-brand-700">99.8%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-1">
+                <div class="bg-brand-500 h-1 rounded-full" style="width: 98%"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const map = L.map('map').setView([31.7917, -7.0926], 6);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; CARTO',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
+
+        const hubs = {{ hubs_json|safe }};
+        const clients = {{ clients_json|safe }};
+        const paths = {{ paths_json|safe }};
+
+        const hubIcon = L.divIcon({
+            className: 'custom-hub-icon',
+            html: `<div style="background-color: #14532d; width: 14px; height: 14px; border: 3px solid white; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3);"></div>`,
+            iconSize: [14, 14],
+            iconAnchor: [7, 7]
+        });
+
+        const clientIcon = L.divIcon({
+            className: 'custom-client-icon',
+            html: `<div style="background-color: #3b82f6; width: 10px; height: 10px; border: 2px solid white; border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.2);"></div>`,
+            iconSize: [10, 10],
+            iconAnchor: [5, 5]
+        });
+
+        hubs.forEach(hub => {
+            L.marker([hub.lat, hub.lng], {icon: hubIcon}).addTo(map)
+                .bindPopup(`<b class="text-brand-900">${hub.name}</b><br><span class="text-[10px] uppercase font-bold text-gray-400">Hub Logistique National</span>`);
+        });
+
+        clients.forEach(client => {
+            L.marker([client.lat, client.lng], {icon: clientIcon}).addTo(map)
+                .bindPopup(`<b class="text-blue-900">${client.name}</b><br><span class="text-[10px] uppercase font-bold text-gray-400">Point de Livraison B2B</span>`);
+        });
+
+        paths.forEach(path => {
+            const isHub = path.type === 'hub';
+            L.polyline(path.coords, {
+                color: isHub ? '#15803d' : '#3b82f6',
+                weight: isHub ? 3 : 2,
+                opacity: 0.5,
+                smoothFactor: 1
+            }).addTo(map).bindTooltip(path.label, {sticky: true});
+        });
+    });
+</script>
+{% endblock %}

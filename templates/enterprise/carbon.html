@@ -1,0 +1,71 @@
+{% extends 'enterprise/base.html' %}
+{% load humanize %}
+
+{% block title %}Rapports Carbone | Atlas Enterprise{% endblock %}
+{% block header_title %}Analyse de l'Empreinte Carbone Logistique{% endblock %}
+
+{% block content %}
+<div class="space-y-10">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="md:col-span-1 bg-emerald-900 p-8 rounded-[32px] text-white shadow-xl shadow-emerald-900/20">
+            <p class="text-[10px] text-emerald-400 font-black uppercase tracking-widest mb-2">Total CO2 Économisé</p>
+            <h3 class="text-4xl font-black mb-4">{{ co2_saved_kg|floatformat:1 }} <span class="text-lg">kg</span></h3>
+            <p class="text-xs text-emerald-400 font-bold mb-1">{{ reduction_pct }}% d'économie réalisée</p>
+            <p class="text-[10px] text-emerald-400/70 font-medium">Sur {{ total_orders }} commandes traitées</p>
+        </div>
+
+        <div class="md:col-span-2 bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-bold text-slate-900 mb-1">Certificat de Durabilité Atlas</h3>
+                <p class="text-xs text-slate-400 font-medium mb-6">Votre score environnemental est dans le top 5% du réseau.</p>
+                <a href="{% url 'enterprise:export_carbon' %}" class="bg-slate-900 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all">Télécharger Certificat</a>
+            </div>
+            <div class="hidden sm:block w-24 h-24 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center border-4 border-emerald-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm">
+        <h3 class="text-xl font-bold text-slate-900 mb-10 tracking-tight text-center">Historique des Émissions par Expédition</h3>
+        <div class="h-[400px]">
+            <canvas id="carbonChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('carbonChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8'],
+                datasets: [{
+                    label: 'CO2 (kg)',
+                    data: {{ weekly_data|safe }},
+                    borderColor: '#10b981',
+                    borderWidth: 5,
+                    pointRadius: 0,
+                    fill: true,
+                    backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } } },
+                    x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

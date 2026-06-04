@@ -1,0 +1,54 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Atlas | Entreprises{% endblock %}
+{% block header_title %}Gestion des Partenaires Entreprises{% endblock %}
+{% block breadcrumb %}Écosystème / Entreprises{% endblock %}
+
+{% block content %}
+<div class="p-10 space-y-8">
+    <!-- Header Actions -->
+    <div class="flex flex-col space-y-4 md:flex-row md:space-y-0 md:justify-between md:items-center">
+        <div class="relative w-full md:w-96">
+            <input type="text" placeholder="Rechercher une entreprise..." class="w-full bg-white border border-slate-200 rounded-xl px-12 py-3 text-sm outline-none focus:border-premium-500 transition-all shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 absolute left-4 top-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+        </div>
+        <div class="flex space-x-2 md:space-x-3">
+            <a href="{% url 'admin_panel:export_data_csv' 'users' %}" class="flex-1 md:flex-none bg-white border border-slate-200 text-slate-700 px-4 md:px-6 py-3 rounded-xl text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-slate-50 transition-all text-center">Exporter CSV</a>
+            <a href="/django-admin/authentication/user/add/" class="flex-1 md:flex-none bg-premium-900 text-white px-4 md:px-6 py-3 rounded-xl text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-black transition-all shadow-lg shadow-premium-900/20 text-center">+ Nouveau</a>
+        </div>
+    </div>
+    <div class="bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden">
+        <table class="w-full text-left">
+            <thead class="bg-slate-50/50 text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.2em]">
+                <tr>
+                    <th class="px-8 py-6">Raison Sociale</th>
+                    <th class="px-8 py-6">Identifiant</th>
+                    <th class="px-8 py-6">Volume Commandes</th>
+                    <th class="px-8 py-6 text-right">Revenus Générés (MAD)</th>
+                    <th class="px-8 py-6">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+                {% for c in companies %}
+                <tr class="hover:bg-slate-50/30 transition-all duration-300">
+                    <td class="px-8 py-6">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-2 h-2 rounded-full bg-premium-500"></div>
+                            <span class="text-sm font-bold text-slate-800">{{ c.company_name }}</span>
+                        </div>
+                    </td>
+                    <td class="px-8 py-6 font-mono text-[11px] text-slate-400">@{{ c.username }}</td>
+                    <td class="px-8 py-6 text-sm font-black text-slate-900">{{ c.order_count }}</td>
+                    <td class="px-8 py-6 text-right font-black text-premium-700 text-sm">{{ c.total_rev|floatformat:0|default:"0" }}</td>
+                    <td class="px-8 py-6">
+                        <a href="{% url 'admin_panel:company_detail' c.id %}" class="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-premium-700 transition-colors">Détails Actions</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S'inscrire - Atlas Logistics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            700: '#15803d',
+                            900: '#14532d',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased overflow-y-auto">
+    <div class="min-h-screen py-12 flex items-center justify-center relative">
+        <!-- Background Image -->
+        <div class="absolute inset-0 z-0">
+            <img src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80" alt="Logistics Background" class="w-full h-full object-cover" />
+            <div class="absolute inset-0 bg-gray-50/90 backdrop-blur-sm"></div>
+        </div>
+
+        <!-- Register Form -->
+        <div class="relative z-10 w-full max-w-xl px-4">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-extrabold text-brand-900 tracking-tight drop-shadow-sm">Rejoindre Atlas Logistics</h1>
+                <p class="text-gray-600 mt-2 font-medium">Créez votre compte partenaire pour accéder à la plateforme.</p>
+            </div>
+
+            <div class="bg-white/95 backdrop-blur-md p-8 rounded-xl shadow-2xl border border-white/50">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Nom d'utilisateur</label>
+                            <input type="text" name="username" id="{{ form.username.id_for_label }}" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-500 focus:border-brand-500 outline-none transition-shadow" placeholder="ex: atlas_partner" required>
+                            {% if form.username.errors %}<p class="text-red-500 text-xs mt-1">{{ form.username.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div>
+                            <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Email Professionnel</label>
+                            <input type="email" name="email" id="{{ form.email.id_for_label }}" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-500 focus:border-brand-500 outline-none transition-shadow" placeholder="contact@entreprise.ma" required>
+                            {% if form.email.errors %}<p class="text-red-500 text-xs mt-1">{{ form.email.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div>
+                            <label for="{{ form.password1.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
+                            <input type="password" name="password1" id="{{ form.password1.id_for_label }}" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-500 focus:border-brand-500 outline-none transition-shadow" required>
+                            {% if form.password1.errors %}<p class="text-red-500 text-xs mt-1">{{ form.password1.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div>
+                            <label for="{{ form.password2.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Confirmation</label>
+                            <input type="password" name="password2" id="{{ form.password2.id_for_label }}" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-500 focus:border-brand-500 outline-none transition-shadow" required>
+                            {% if form.password2.errors %}<p class="text-red-500 text-xs mt-1">{{ form.password2.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div>
+                            <label for="{{ form.role.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Votre Rôle</label>
+                            <select name="role" id="{{ form.role.id_for_label }}" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-500 focus:border-brand-500 outline-none transition-shadow bg-white">
+                                {% for val, label in form.fields.role.choices %}
+                                    <option value="{{ val }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            {% if form.role.errors %}<p class="text-red-500 text-xs mt-1">{{ form.role.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div>
+                            <label for="{{ form.company_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Nom de l'Entreprise</label>
+                            <input type="text" name="company_name" id="{{ form.company_name.id_for_label }}" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-500 focus:border-brand-500 outline-none transition-shadow" placeholder="ex: Atlas Textile SARL">
+                            {% if form.company_name.errors %}<p class="text-red-500 text-xs mt-1">{{ form.company_name.errors.0 }}</p>{% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if form.non_field_errors %}
+                    <div class="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-200">
+                        {{ form.non_field_errors.0 }}
+                    </div>
+                    {% endif %}
+
+                    <button type="submit" class="w-full bg-brand-700 hover:bg-brand-900 text-white font-semibold py-3 rounded-md transition-colors shadow-lg hover:shadow-xl">
+                        Créer mon Compte Partenaire
+                    </button>
+                    
+                    <div class="mt-6 text-center">
+                        <p class="text-sm text-gray-500">
+                            Déjà inscrit ? <a href="{% url 'login' %}" class="text-brand-700 font-bold hover:underline">Se connecter ici</a>
+                        </p>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="text-center mt-8">
+                <p class="text-gray-500 text-xs font-medium">© 2026 Atlas Logistics Morocco. Infrastructure Logistique Intelligente.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

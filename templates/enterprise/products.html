@@ -1,0 +1,250 @@
+{% extends 'enterprise/base.html' %}
+{% load humanize %}
+
+{% block title %}Mes Produits & Distribution | Atlas{% endblock %}
+{% block header_title %}Gestion des Stocks & Distribution Multi-Hubs{% endblock %}
+
+{% block content %}
+<div class="space-y-10">
+    <!-- Header with Action -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h2 class="text-2xl font-black text-slate-900 tracking-tight">Catalogue & Inventaire</h2>
+            <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Supervision de la répartition géographique</p>
+        </div>
+        <button onclick="document.getElementById('add-product-modal').classList.remove('hidden')" class="px-6 py-3 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20">
+            Ajouter un Nouveau Produit
+        </button>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+        <form method="GET" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 items-end">
+            <div class="space-y-2">
+                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Filtrer par Produit</label>
+                <select name="product" class="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option value="">Tous les produits</option>
+                    {% for p_name in my_product_names %}
+                    <option value="{{ p_name }}" {% if query_p == p_name %}selected{% endif %}>{{ p_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="space-y-2">
+                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Filtrer par Hub</label>
+                <select name="warehouse" class="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option value="">Tous les Hubs</option>
+                    {% for wh in warehouses %}
+                    <option value="{{ wh.id }}" {% if query_wh == wh.id|stringformat:"s" %}selected{% endif %}>{{ wh.city }} ({{ wh.name }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex gap-2">
+                <button type="submit" class="flex-1 py-3 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-black transition-all">Filtrer</button>
+                <a href="{% url 'enterprise:products' %}" class="flex-1 py-3 bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-200 transition-all text-center">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Inventory Distribution Table -->
+    <div class="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
+        <div class="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest">Répartition par Hub Logistique</h3>
+            <div class="flex space-x-2">
+                <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-[9px] font-black uppercase rounded-full">Optimisé par Atlas AI</span>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/50">
+                        <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Produit</th>
+                        <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Catégorie</th>
+                        <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Stock Global</th>
+                        <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Répartition Hubs</th>
+                        <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    {% for name, data in inventory.items %}
+                    <tr class="hover:bg-slate-50/50 transition-colors group">
+                        <td class="px-8 py-6">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-100">
+                                    {% if data.details.image %}
+                                        <img src="{{ data.details.image.url }}" class="w-full h-full object-cover">
+                                    {% else %}
+                                        <div class="w-full h-full flex items-center justify-center text-slate-300">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <p class="text-sm font-black text-slate-900">{{ name }}</p>
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{{ data.details.price|intcomma }} MAD</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-8 py-6">
+                            <span class="px-3 py-1 bg-blue-50 text-blue-600 text-[9px] font-black uppercase rounded-lg">{{ data.details.category }}</span>
+                        </td>
+                        <td class="px-8 py-6 text-center">
+                            <p class="text-sm font-black text-slate-900">{{ data.distribution|length }} Hub(s)</p>
+                        </td>
+                        <td class="px-8 py-6">
+                            <div class="flex flex-wrap gap-2 items-center">
+                                {% for item in data.distribution %}
+                                <div class="flex items-center space-x-2 bg-slate-100 px-3 py-2 rounded-xl border border-slate-200">
+                                    <span class="text-[10px] font-black text-slate-700 uppercase">{{ item.warehouse.city }}</span>
+                                    <div class="w-px h-3 bg-slate-300"></div>
+                                    <span class="text-[10px] font-black {% if item.stock < 20 %}text-red-500{% else %}text-blue-600{% endif %}">{{ item.stock }}</span>
+                                    <button onclick="openReplenishModal('{{ item.id }}', '{{ name }}', '{{ item.warehouse.city }}')" class="hover:text-blue-500 transition-all">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" /></svg>
+                                    </button>
+                                </div>
+                                {% endfor %}
+                                <button onclick="openFastDeployModal('{{ name }}')" class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all border border-blue-100" title="Déployer sur un nouveau Hub">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                </button>
+                            </div>
+                        </td>
+                        <td class="px-8 py-6 text-right">
+                            <form action="{% url 'enterprise:delete_product' data.details.id %}" method="POST" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="p-2 text-slate-300 hover:text-red-500 transition-all">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-8 py-20 text-center">
+                            <p class="text-slate-400 text-sm font-medium">Aucun produit dans votre inventaire Atlas.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Ajouter Produit -->
+<div id="add-product-modal" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="this.parentElement.classList.add('hidden')"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-xl bg-white rounded-[40px] shadow-2xl p-10">
+        <div class="flex justify-between items-center mb-8">
+            <h3 class="text-2xl font-black text-slate-900 tracking-tighter">Nouveau Produit</h3>
+            <button onclick="this.closest('#add-product-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-900">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+        <form action="{% url 'enterprise:add_product' %}" method="POST" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            <div class="grid grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nom du Produit</label>
+                    <input type="text" name="name" required class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Catégorie</label>
+                    <input type="text" name="category" required class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Prix (MAD)</label>
+                    <input type="number" step="0.01" name="price" required class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stock Initial</label>
+                    <input type="number" name="stock" required class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+            </div>
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hub de Dépôt Initial</label>
+                <select name="warehouse_id" required class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    {% for wh in warehouses %}
+                    <option value="{{ wh.id }}">{{ wh.name }} ({{ wh.city }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Visuel Produit</label>
+                <input type="file" name="image" accept="image/*" class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <button type="submit" class="w-full py-5 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-slate-900/20 hover:bg-black transition-all">
+                Enregistrer le Produit
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Réapprovisionner -->
+<div id="replenish-modal" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="this.parentElement.classList.add('hidden')"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-white rounded-[40px] shadow-2xl p-10">
+        <h3 class="text-xl font-black text-slate-900 tracking-tighter mb-2" id="replenish-title">Réapprovisionner</h3>
+        <p class="text-xs text-slate-400 mb-8" id="replenish-subtitle">Hub : ...</p>
+        <form method="POST" class="space-y-6">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="replenish">
+            <input type="hidden" name="product_id" id="replenish-product-id">
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Quantité à ajouter</label>
+                <input type="number" name="amount" value="50" min="1" required class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <button type="submit" class="w-full py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-600/20">
+                Valider l'Approvisionnement
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Déployer sur un autre Hub -->
+<div id="fast-deploy-modal" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="this.parentElement.classList.add('hidden')"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-white rounded-[40px] shadow-2xl p-10">
+        <h3 class="text-xl font-black text-slate-900 tracking-tighter mb-2">Déployer sur un Hub</h3>
+        <p class="text-xs text-slate-400 mb-8" id="fast-deploy-product-name">Produit : ...</p>
+        <form method="POST" class="space-y-6">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="fast_deploy">
+            <input type="hidden" name="name" id="fast-deploy-name-input">
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Choisir le Hub de destination</label>
+                <select name="warehouse_id" required class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    {% for wh in warehouses %}
+                    <option value="{{ wh.id }}">{{ wh.city }} ({{ wh.name }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stock Initial dans ce Hub</label>
+                <input type="number" name="amount" value="100" min="1" required class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <button type="submit" class="w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-slate-900/20 hover:bg-black transition-all">
+                Lancer le Déploiement
+            </button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function openReplenishModal(id, name, city) {
+        document.getElementById('replenish-product-id').value = id;
+        document.getElementById('replenish-title').innerText = "Réapprovisionner : " + name;
+        document.getElementById('replenish-subtitle').innerText = "Hub : " + city;
+        document.getElementById('replenish-modal').classList.remove('hidden');
+    }
+
+    function openFastDeployModal(name) {
+        document.getElementById('fast-deploy-name-input').value = name;
+        document.getElementById('fast-deploy-product-name').innerText = "Produit : " + name;
+        document.getElementById('fast-deploy-modal').classList.remove('hidden');
+    }
+</script>
+{% endblock %}

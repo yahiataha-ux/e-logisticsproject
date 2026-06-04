@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chauffeur Dashboard - Atlas Logistics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 h-screen flex overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex">
+        <div class="p-6 border-b border-slate-800 flex items-center gap-4">
+            {% if chauffeur.photo %}
+            <img src="{{ chauffeur.photo.url }}" class="w-12 h-12 rounded-full border-2 border-blue-500">
+            {% else %}
+            <div class="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center border-2 border-blue-500">
+                <i class="fas fa-user"></i>
+            </div>
+            {% endif %}
+            <div>
+                <h2 class="font-bold text-lg leading-tight">{{ chauffeur.user.first_name|default:chauffeur.user.username }}</h2>
+                <span class="text-xs px-2 py-1 rounded-full bg-blue-900 text-blue-200 mt-1 inline-block">
+                    <i class="fas fa-circle text-[8px] text-green-400 mr-1"></i> {{ chauffeur.get_statut_display }}
+                </span>
+            </div>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto py-4">
+            <ul class="space-y-1">
+                <li>
+                    <a href="{% url 'transporter:dashboard' %}" class="flex items-center px-6 py-3 bg-blue-600 text-white border-l-4 border-white">
+                        <i class="fas fa-map-marked-alt w-6"></i>
+                        <span>En cours</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'transporter:historique' %}" class="flex items-center px-6 py-3 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors border-l-4 border-transparent hover:border-slate-500">
+                        <i class="fas fa-history w-6"></i>
+                        <span>Historique</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'transporter:notifications' %}" class="flex items-center px-6 py-3 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors border-l-4 border-transparent hover:border-slate-500">
+                        <i class="fas fa-bell w-6"></i>
+                        <span>Alertes</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <div class="p-4 border-t border-slate-800">
+            <a href="{% url 'logout' %}" class="flex items-center justify-center w-full px-4 py-2 text-sm text-red-400 border border-red-400 rounded hover:bg-red-400 hover:text-white transition-colors">
+                <i class="fas fa-sign-out-alt mr-2"></i> Déconnexion
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        <!-- Topbar mobile -->
+        <header class="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center">
+            <div class="font-bold">Atlas Chauffeur</div>
+            <button id="menuBtn"><i class="fas fa-bars"></i></button>
+        </header>
+
+        {% block main_content %}{% endblock %}
+    </main>
+
+</body>
+</html>
