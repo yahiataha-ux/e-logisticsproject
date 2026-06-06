@@ -83,8 +83,8 @@
                 </div>
                 
                 {% if p.stock > 0 %}
-                <a href="{% url 'client:place_order' p.id %}" class="group relative block w-full overflow-hidden rounded-2xl bg-luxury-900 p-5 text-center transition-all hover:bg-black">
-                    <span class="relative z-10 text-[11px] font-black uppercase tracking-widest text-white">Lancer la Commande Optimisée</span>
+                <a href="{% url 'client:order_form' p.id %}" class="group relative block w-full overflow-hidden rounded-2xl bg-luxury-900 p-5 text-center transition-all hover:bg-black">
+                    <span class="relative z-10 text-[11px] font-black uppercase tracking-widest text-white">Lancer la Commande Optimisée →</span>
                     <div class="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-1000 group-hover:translate-x-full"></div>
                 </a>
                 {% else %}

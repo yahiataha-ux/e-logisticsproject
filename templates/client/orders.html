@@ -5,36 +5,88 @@
 {% block content %}
 <div class="container mx-auto px-6 py-20">
     <div class="max-w-4xl mx-auto">
-        <h2 class="text-4xl font-black tracking-tighter mb-12">Journal de Bord <span class="text-luxury-gold">Logistique</span>.</h2>
+        <h2 class="text-4xl font-black tracking-tighter mb-3">Journal de Bord <span class="text-luxury-gold">Logistique</span>.</h2>
+        <p class="text-slate-400 text-sm mb-12">Suivez l'avancement de toutes vos commandes en temps réel.</p>
         
         <div class="space-y-6">
             {% for o in orders %}
-            <div class="bg-white p-8 rounded-[32px] border border-slate-100 shadow-xl shadow-black/5 flex flex-col md:flex-row md:items-center justify-between gap-8 group">
-                <div class="flex items-center space-x-6">
-                    <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-luxury-gold border border-slate-100">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+            <div class="bg-white p-8 rounded-[32px] border border-slate-100 shadow-xl shadow-black/5 group hover:shadow-2xl transition-all duration-300">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    
+                    <!-- Product Info -->
+                    <div class="flex items-center space-x-6">
+                        <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-luxury-gold border border-slate-100 flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-black tracking-tight leading-none mb-1">{{ o.product.name }}</h4>
+                            <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">{{ o.order_date|date:"d F Y à H:i" }}</p>
+                            <!-- Quantity + City badges -->
+                            <div class="flex items-center space-x-2 mt-2">
+                                <span class="inline-flex items-center space-x-1 bg-slate-100 text-slate-600 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/></svg>
+                                    <span>Qté : {{ o.quantity }}</span>
+                                </span>
+                                <span class="inline-flex items-center space-x-1 bg-blue-50 text-blue-600 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    <span>{{ o.delivery_address }}</span>
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <h4 class="text-lg font-black tracking-tight leading-none mb-2">{{ o.product.name }}</h4>
-                        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">{{ o.order_date|date:"d F Y" }}</p>
+
+                    <!-- Status -->
+                    <div class="flex flex-col items-start md:items-center">
+                        <span class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Statut</span>
+                        <span class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest 
+                            {% if o.status == 'Livrée' %}bg-emerald-50 text-emerald-600
+                            {% elif o.status == 'En livraison' %}bg-blue-50 text-blue-600 animate-pulse
+                            {% elif o.status == 'Confirmée' %}bg-amber-50 text-amber-600 animate-pulse
+                            {% else %}bg-slate-100 text-slate-500{% endif %}">
+                            {% if o.status == 'En livraison' %}🚚 {% elif o.status == 'Livrée' %}✅ {% elif o.status == 'Confirmée' %}⏳ {% endif %}
+                            {{ o.status }}
+                        </span>
                     </div>
+
+                    <!-- Price + Actions -->
+                    <div class="text-right flex-shrink-0">
+                        <p class="text-xl font-black text-luxury-900 mb-0.5">{{ o.price_total|floatformat:0 }} <span class="text-[10px] font-black text-slate-400">MAD</span></p>
+                        <p class="text-[9px] text-emerald-600 font-bold mb-3">🌿 {{ o.co2_emission|floatformat:1 }} kg CO₂</p>
+                        <a href="{% url 'client:tracking' o.id %}" 
+                           class="inline-flex items-center space-x-1 text-[10px] font-black uppercase tracking-widest text-luxury-gold hover:underline">
+                            <span>Suivre le colis</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                    </div>
+
                 </div>
 
-                <div class="flex flex-col md:items-center">
-                    <span class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Statut</span>
-                    <span class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest {% if o.status == 'Livrée' %}bg-emerald-50 text-emerald-600{% else %}bg-amber-50 text-amber-600 animate-pulse{% endif %}">
-                        {{ o.status }}
-                    </span>
+                <!-- Notes if present -->
+                {% if o.delivery_notes %}
+                <div class="mt-5 pt-5 border-t border-slate-100 flex items-start space-x-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-300 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                    </svg>
+                    <p class="text-xs text-slate-400 italic leading-relaxed">{{ o.delivery_notes }}</p>
                 </div>
+                {% endif %}
 
-                <div class="text-right">
-                    <p class="text-xl font-light italic text-luxury-900 mb-1">{{ o.price_total }} <span class="text-[10px] font-black not-italic text-slate-400">MAD</span></p>
-                    <a href="{% url 'client:tracking' o.id %}" class="text-[10px] font-black uppercase tracking-widest text-luxury-gold hover:underline">Suivre le colis</a>
-                </div>
             </div>
             {% empty %}
-            <div class="text-center py-20 bg-slate-50 rounded-[40px] border border-dashed border-slate-200">
-                <p class="text-slate-400 font-light italic">Aucune commande active pour le moment.</p>
+            <div class="text-center py-24 bg-white rounded-[40px] border border-dashed border-slate-200 shadow-sm">
+                <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                    </svg>
+                </div>
+                <p class="text-slate-400 font-light italic mb-4">Aucune commande active pour le moment.</p>
+                <a href="{% url 'client:marketplace' %}" class="inline-flex items-center space-x-2 bg-luxury-900 text-white px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all">
+                    <span>Explorer le catalogue</span>
+                </a>
             </div>
             {% endfor %}
         </div>

@@ -2,6 +2,21 @@ from django.db import models
 from apps.authentication.models import User
 from apps.logistics_core.models import Product
 
+MOROCCAN_CITIES = [
+    ('Casablanca', 'Casablanca'),
+    ('Rabat', 'Rabat'),
+    ('Tanger', 'Tanger'),
+    ('Marrakech', 'Marrakech'),
+    ('Agadir', 'Agadir'),
+    ('Fès', 'Fès'),
+    ('Oujda', 'Oujda'),
+    ('Meknès', 'Meknès'),
+    ('Kénitra', 'Kénitra'),
+    ('Tétouan', 'Tétouan'),
+    ('Dakhla', 'Dakhla'),
+    ('Laâyoune', 'Laâyoune'),
+]
+
 class Order(models.Model):
     STATUS_CHOICES = (
         ('En attente', 'En attente'),
@@ -17,6 +32,8 @@ class Order(models.Model):
     price_total = models.FloatField()
     quantity = models.IntegerField(default=1)
     deadline = models.DateTimeField(null=True, blank=True)
+    delivery_address = models.CharField(max_length=255, default='Casablanca', choices=MOROCCAN_CITIES)
+    delivery_notes = models.TextField(blank=True, null=True, help_text="Instructions spéciales de livraison")
 
     def __str__(self):
         return f"Order {self.id} - {self.client.username}"

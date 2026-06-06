@@ -1,0 +1,236 @@
+{% extends 'client/base.html' %}
+{% load humanize %}
+
+{% block title %}Commander {{ product.name }} | Atlas Market{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-luxury-50 py-12 px-4">
+  <div class="max-w-5xl mx-auto">
+
+    <!-- Back link -->
+    <a href="{% url 'client:marketplace' %}" 
+       class="inline-flex items-center space-x-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-black mb-10 transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      <span>Retour au catalogue</span>
+    </a>
+
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-10">
+
+      <!-- ====== Product Summary Card (left) ====== -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-[32px] overflow-hidden shadow-2xl shadow-black/5 border border-slate-100 sticky top-28">
+          <div class="h-56 overflow-hidden relative">
+            <img src="{{ product.get_dynamic_image }}" 
+                 alt="{{ product.name }}" 
+                 class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+            <span class="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-slate-900 shadow">
+              {{ product.category }}
+            </span>
+          </div>
+          <div class="p-7">
+            <h2 class="text-2xl font-black tracking-tighter leading-tight mb-1">{{ product.name }}</h2>
+            <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-6">
+              Entrepôt : {{ product.warehouse.city }}
+            </p>
+
+            <div class="space-y-3 mb-6">
+              <div class="flex justify-between items-center py-3 border-b border-slate-100">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Prix unitaire</span>
+                <span class="text-xl font-black text-luxury-gold">{{ product.price|intcomma }} <span class="text-[10px] text-slate-400">MAD</span></span>
+              </div>
+              <div class="flex justify-between items-center py-3 border-b border-slate-100">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Impact CO₂</span>
+                <span class="text-sm font-black text-emerald-600">{{ product.co2_impact|floatformat:1 }} kg/unité</span>
+              </div>
+              <div class="flex justify-between items-center py-3">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stock disponible</span>
+                <span class="text-sm font-black text-luxury-900">{{ product.stock }} unités</span>
+              </div>
+            </div>
+
+            <!-- Live total preview -->
+            <div class="bg-luxury-900 text-white p-5 rounded-2xl">
+              <p class="text-[9px] font-black uppercase tracking-widest text-white/50 mb-1">Total estimé</p>
+              <p id="price-preview" class="text-3xl font-black tracking-tighter">{{ product.price|intcomma }} <span class="text-[11px] font-bold text-white/60">MAD</span></p>
+              <p id="co2-preview" class="text-[10px] text-emerald-400 font-bold mt-1">{{ product.co2_impact|floatformat:1 }} kg CO₂</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== Order Form (right) ====== -->
+      <div class="lg:col-span-3">
+        <div class="bg-white rounded-[32px] p-8 lg:p-10 shadow-2xl shadow-black/5 border border-slate-100">
+
+          <div class="mb-10">
+            <p class="text-[10px] font-black uppercase tracking-widest text-luxury-gold mb-2">Étape 1/1 — Configuration de la commande</p>
+            <h1 class="text-4xl font-black tracking-tighter leading-none">Finaliser votre <span class="text-luxury-gold">Commande</span></h1>
+            <p class="text-slate-400 text-sm mt-3 leading-relaxed">Renseignez la quantité souhaitée et votre adresse de livraison pour optimiser votre itinéraire logistique.</p>
+          </div>
+
+          {% if messages %}
+          <div class="mb-6 space-y-2">
+            {% for msg in messages %}
+            <div class="p-4 rounded-2xl {% if msg.tags == 'error' %}bg-rose-50 text-rose-700 border border-rose-100{% else %}bg-emerald-50 text-emerald-700 border border-emerald-100{% endif %} text-sm font-bold">
+              {{ msg }}
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <form method="POST" id="order-form" class="space-y-8">
+            {% csrf_token %}
+
+            <!-- Quantity -->
+            <div>
+              <label class="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">
+                Quantité souhaitée
+              </label>
+              <div class="flex items-center space-x-4">
+                <button type="button" id="qty-minus"
+                  class="w-12 h-12 bg-slate-100 hover:bg-slate-200 rounded-2xl flex items-center justify-center text-xl font-black transition-all active:scale-95">
+                  −
+                </button>
+                <input type="number" name="quantity" id="quantity" 
+                       value="1" min="1" max="{{ max_quantity }}"
+                       class="w-24 h-12 text-center text-2xl font-black border-2 border-slate-200 rounded-2xl focus:border-luxury-900 focus:outline-none transition-all">
+                <button type="button" id="qty-plus"
+                  class="w-12 h-12 bg-slate-100 hover:bg-slate-200 rounded-2xl flex items-center justify-center text-xl font-black transition-all active:scale-95">
+                  +
+                </button>
+                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">max. {{ max_quantity }}</span>
+              </div>
+            </div>
+
+            <!-- Delivery City -->
+            <div>
+              <label class="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">
+                Ville de livraison
+              </label>
+              <div class="relative">
+                <select name="delivery_address" id="delivery_address"
+                        class="w-full h-14 pl-5 pr-12 bg-slate-50 border-2 border-slate-200 rounded-2xl text-sm font-black text-luxury-900 appearance-none focus:border-luxury-900 focus:outline-none transition-all cursor-pointer">
+                  {% for city_val, city_label in cities %}
+                  <option value="{{ city_val }}">📍 {{ city_label }}</option>
+                  {% endfor %}
+                </select>
+                <div class="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-slate-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                  </svg>
+                </div>
+              </div>
+              <p class="text-[10px] text-slate-400 mt-2 font-bold">Notre algorithme calculera le trajet optimal depuis l'entrepôt de <strong>{{ product.warehouse.city }}</strong>.</p>
+            </div>
+
+            <!-- Delivery Notes -->
+            <div>
+              <label class="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">
+                Instructions de livraison <span class="text-slate-300">(optionnel)</span>
+              </label>
+              <textarea name="delivery_notes" id="delivery_notes" rows="3"
+                        placeholder="Ex: Livraison en matinée, sonner au 2ème étage, appeler avant..."
+                        class="w-full p-5 bg-slate-50 border-2 border-slate-200 rounded-2xl text-sm font-medium text-luxury-900 focus:border-luxury-900 focus:outline-none transition-all resize-none placeholder-slate-300"></textarea>
+            </div>
+
+            <!-- Order Summary strip -->
+            <div id="order-summary" class="bg-slate-50 border-2 border-slate-100 rounded-2xl p-6 space-y-3">
+              <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-4">Récapitulatif de commande</p>
+              <div class="flex justify-between text-sm">
+                <span class="text-slate-500 font-medium">Produit</span>
+                <span class="font-black">{{ product.name }}</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-slate-500 font-medium">Quantité</span>
+                <span id="summary-qty" class="font-black">1 unité</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-slate-500 font-medium">Livraison vers</span>
+                <span id="summary-city" class="font-black">Casablanca</span>
+              </div>
+              <div class="flex justify-between text-sm border-t border-slate-200 pt-3 mt-2">
+                <span class="text-slate-500 font-medium">Total</span>
+                <span id="summary-total" class="font-black text-luxury-gold text-lg">{{ product.price|intcomma }} MAD</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-slate-500 font-medium">Impact CO₂ total</span>
+                <span id="summary-co2" class="font-black text-emerald-600">{{ product.co2_impact|floatformat:1 }} kg</span>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" id="submit-btn"
+              class="group relative w-full overflow-hidden bg-luxury-900 text-white py-5 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-black transition-all shadow-2xl shadow-black/20 active:scale-[0.98]">
+              <span class="relative z-10 flex items-center justify-center space-x-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                <span>Confirmer la commande optimisée</span>
+              </span>
+              <div class="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-1000 group-hover:translate-x-full"></div>
+            </button>
+
+            <p class="text-center text-[10px] text-slate-400 font-bold">
+              🔒 Paiement sécurisé · Livraison tracée en temps réel · Empreinte carbone optimisée
+            </p>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const unitPrice = {{ product.price }};
+  const unitCo2   = {{ product.co2_impact }};
+  const maxQty    = {{ max_quantity }};
+  const qtyInput  = document.getElementById('quantity');
+  const citySelect = document.getElementById('delivery_address');
+
+  function updatePreviews() {
+    const qty = parseInt(qtyInput.value) || 1;
+    const city = citySelect.options[citySelect.selectedIndex].text.replace('📍 ', '');
+
+    const total   = (unitPrice * qty).toLocaleString('fr-FR');
+    const co2     = (unitCo2 * qty).toFixed(1);
+
+    // Left card
+    document.getElementById('price-preview').innerHTML = total + ' <span class="text-[11px] font-bold text-white/60">MAD</span>';
+    document.getElementById('co2-preview').textContent = co2 + ' kg CO₂';
+
+    // Summary strip
+    document.getElementById('summary-qty').textContent   = qty + (qty > 1 ? ' unités' : ' unité');
+    document.getElementById('summary-city').textContent  = city;
+    document.getElementById('summary-total').textContent = total + ' MAD';
+    document.getElementById('summary-co2').textContent   = co2 + ' kg';
+  }
+
+  document.getElementById('qty-minus').addEventListener('click', () => {
+    if (parseInt(qtyInput.value) > 1) { qtyInput.value--; updatePreviews(); }
+  });
+
+  document.getElementById('qty-plus').addEventListener('click', () => {
+    if (parseInt(qtyInput.value) < maxQty) { qtyInput.value++; updatePreviews(); }
+  });
+
+  qtyInput.addEventListener('input', () => {
+    let v = parseInt(qtyInput.value);
+    if (isNaN(v) || v < 1)  v = 1;
+    if (v > maxQty)          v = maxQty;
+    qtyInput.value = v;
+    updatePreviews();
+  });
+
+  citySelect.addEventListener('change', updatePreviews);
+
+  // Prevent double-submit
+  document.getElementById('order-form').addEventListener('submit', () => {
+    document.getElementById('submit-btn').disabled = true;
+    document.getElementById('submit-btn').innerHTML = '<span class="opacity-60">Traitement en cours...</span>';
+  });
+</script>
+{% endblock %}

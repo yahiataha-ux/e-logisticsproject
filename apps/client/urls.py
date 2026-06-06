@@ -9,5 +9,5 @@ urlpatterns = [
     path('impact-eco/', views.impact_eco_view, name='impact_eco'),
     path('orders/', views.orders_view, name='orders'),
     path('tracking/<int:order_id>/', views.tracking_view, name='tracking'),
-    path('order/place/<int:product_id>/', views.place_order, name='place_order'),
+    path('order/form/<int:product_id>/', views.order_form_view, name='order_form'),
 ]
